@@ -1,0 +1,35 @@
+# Dépendances
+node_modules/
+
+# Variables d'environnement (NE JAMAIS commit ce fichier)
+.env
+
+# Fichiers uploadés par les utilisateurs
+uploads/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE / Éditeurs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Qodo
+.qodo/
+
+# Build
+dist/
+build/
+
+# Coverage tests
+coverage/
