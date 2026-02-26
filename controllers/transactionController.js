@@ -1,5 +1,5 @@
 const { Paiement, Commande, Notification } = require('../models');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 
 // =============================================
 // INITIER UN PAIEMENT MOBILE MONEY (client)
@@ -38,7 +38,7 @@ exports.initierPaiement = async (req, res) => {
     }
 
     // Générer une référence unique
-    const reference_transaction = `PAY-${Date.now()}-${uuidv4().substring(0, 8).toUpperCase()}`;
+    const reference_transaction = `PAY-${Date.now()}-${crypto.randomUUID().substring(0, 8).toUpperCase()}`;
 
     const paiement = await Paiement.create({
       commande_id,

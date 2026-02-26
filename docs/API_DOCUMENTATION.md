@@ -8,7 +8,8 @@
 
 ## Table des matières
 
-1. [Présentation du projet](#1-présentation-du-projet)
+1. [Présentation du projet](#1-présent
+ation-du-projet)
 2. [Architecture technique](#2-architecture-technique)
 3. [Installation & Configuration](#3-installation--configuration)
 4. [Authentification & Sécurité](#4-authentification--sécurité)

@@ -1,5 +1,5 @@
 const { Commande, LigneCommande, Produit, Vendeur, Client, Paiement, Livraison, Notification } = require('../models');
-const { v4: uuidv4 } = require('uuid');
+const crypto = require('crypto');
 const sequelize = require('../config/db');
 
 // =============================================
@@ -26,7 +26,7 @@ exports.createCommande = async (req, res) => {
     }
 
     // Générer numéro de commande unique
-    const numero_commande = `CMD-${Date.now()}-${uuidv4().substring(0, 6).toUpperCase()}`;
+    const numero_commande = `CMD-${Date.now()}-${crypto.randomUUID().substring(0, 6).toUpperCase()}`;
 
     // Calculer le montant total et vérifier les stocks
     let montant_total = 0;
