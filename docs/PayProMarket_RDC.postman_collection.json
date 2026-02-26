@@ -1,0 +1,1707 @@
+{
+	"info": {
+		"_postman_id": "paypromarket-rdc-api",
+		"name": "PayPro Market RDC - API",
+		"description": "Collection complète pour tester l'API PayPro Market RDC.\n\n## Configuration\n1. Importer cette collection dans Postman\n2. Configurer les variables de la collection (clic droit → Edit → Variables)\n3. Commencer par les endpoints d'inscription/connexion pour obtenir les tokens\n4. Les tokens sont automatiquement sauvegardés via les scripts\n\n## Ordre de test recommandé\n1. Auth → Inscription vendeur\n2. Auth → Connexion vendeur\n3. Vendeurs → Profil, Logo, Zones\n4. Produits → Créer, Lister\n5. Auth → Inscription client\n6. Auth → Connexion client\n7. Commandes → Créer\n8. Paiements → Initier, Confirmer\n9. Dashboard",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:5000",
+			"type": "string"
+		},
+		{
+			"key": "vendeur_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "client_token",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "vendeur_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "client_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "produit_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "produit_slug",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "boutique_slug",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "commande_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "zone_id",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "reference_transaction",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "notification_id",
+			"value": "",
+			"type": "string"
+		}
+	],
+	"item": [
+		{
+			"name": "🏠 Root",
+			"item": [
+				{
+					"name": "Welcome - Info API",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/",
+							"host": ["{{base_url}}"],
+							"path": [""]
+						},
+						"description": "Vérifier que l'API est en ligne et voir les routes disponibles."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔐 Authentification",
+			"item": [
+				{
+					"name": "Inscription Vendeur",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('vendeur_token', jsonData.token);",
+									"    pm.collectionVariables.set('vendeur_id', jsonData.vendeur.id);",
+									"    pm.collectionVariables.set('boutique_slug', jsonData.vendeur.slug);",
+									"    pm.test('Inscription vendeur réussie', function() {",
+									"        pm.expect(jsonData.message).to.include('créée');",
+									"        pm.expect(jsonData.token).to.be.a('string');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom_boutique\": \"Boutique Test Kinshasa\",\n    \"type_boutique\": \"détaillant\",\n    \"telephone\": \"+243810000001\",\n    \"email\": \"vendeur.test@paypromarket.cd\",\n    \"mot_de_passe\": \"MotDePasse123!\",\n    \"ville\": \"Kinshasa\",\n    \"categorie_boutique\": \"électronique\",\n    \"description\": \"Boutique de vente d'appareils électroniques à Kinshasa\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/vendeur/inscription",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "vendeur", "inscription"]
+						},
+						"description": "Créer un nouveau compte vendeur. Le token est automatiquement sauvegardé."
+					},
+					"response": []
+				},
+				{
+					"name": "Connexion Vendeur",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('vendeur_token', jsonData.token);",
+									"    pm.collectionVariables.set('vendeur_id', jsonData.vendeur.id);",
+									"    pm.test('Connexion vendeur réussie', function() {",
+									"        pm.expect(jsonData.message).to.include('Connexion');",
+									"        pm.expect(jsonData.token).to.be.a('string');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"vendeur.test@paypromarket.cd\",\n    \"mot_de_passe\": \"MotDePasse123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/vendeur/connexion",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "vendeur", "connexion"]
+						},
+						"description": "Se connecter en tant que vendeur. Le token est automatiquement sauvegardé."
+					},
+					"response": []
+				},
+				{
+					"name": "Inscription Client",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('client_token', jsonData.token);",
+									"    pm.collectionVariables.set('client_id', jsonData.client.id);",
+									"    pm.test('Inscription client réussie', function() {",
+									"        pm.expect(jsonData.message).to.include('créé');",
+									"        pm.expect(jsonData.token).to.be.a('string');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Kabwit\",\n    \"prenom\": \"Jean\",\n    \"telephone\": \"+243890000001\",\n    \"email\": \"client.test@paypromarket.cd\",\n    \"mot_de_passe\": \"ClientPass123!\",\n    \"ville\": \"Lubumbashi\",\n    \"adresse\": \"Avenue Sendwe, Q/Lubumbashi\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/client/inscription",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "client", "inscription"]
+						},
+						"description": "Créer un nouveau compte client. Le token est automatiquement sauvegardé."
+					},
+					"response": []
+				},
+				{
+					"name": "Connexion Client",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('client_token', jsonData.token);",
+									"    pm.collectionVariables.set('client_id', jsonData.client.id);",
+									"    pm.test('Connexion client réussie', function() {",
+									"        pm.expect(jsonData.message).to.include('Connexion');",
+									"        pm.expect(jsonData.token).to.be.a('string');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"telephone\": \"+243890000001\",\n    \"mot_de_passe\": \"ClientPass123!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/client/connexion",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "client", "connexion"]
+						},
+						"description": "Se connecter en tant que client (par téléphone). Le token est automatiquement sauvegardé."
+					},
+					"response": []
+				},
+				{
+					"name": "Voir Profil (Auth)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}",
+								"description": "Changer en client_token pour voir le profil client"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/auth/profil",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "profil"]
+						},
+						"description": "Voir le profil de l'utilisateur connecté. Utiliser vendeur_token ou client_token."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🏪 Vendeurs",
+			"item": [
+				{
+					"name": "Lister Boutiques (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/vendeurs/boutiques?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "vendeurs", "boutiques"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "20" },
+								{ "key": "ville", "value": "Kinshasa", "disabled": true },
+								{ "key": "categorie", "value": "électronique", "disabled": true },
+								{ "key": "type", "value": "détaillant", "disabled": true },
+								{ "key": "search", "value": "boutique", "disabled": true }
+							]
+						},
+						"description": "Lister toutes les boutiques actives. Activer les query params pour filtrer."
+					},
+					"response": []
+				},
+				{
+					"name": "Voir Boutique par Slug (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/vendeurs/boutique/{{boutique_slug}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "vendeurs", "boutique", "{{boutique_slug}}"]
+						},
+						"description": "Voir une boutique avec ses produits. Le slug est généré automatiquement à partir du nom de boutique."
+					},
+					"response": []
+				},
+				{
+					"name": "Mon Profil Vendeur",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/vendeurs/profil",
+							"host": ["{{base_url}}"],
+							"path": ["api", "vendeurs", "profil"]
+						},
+						"description": "Voir son profil vendeur avec les zones de livraison."
+					},
+					"response": []
+				},
+				{
+					"name": "Modifier Profil Vendeur",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom_boutique\": \"Boutique Kinshasa Updated\",\n    \"description\": \"Nouvelle description de ma boutique\",\n    \"ville\": \"Kinshasa\",\n    \"adresse\": \"Avenue de la Paix, Gombe\",\n    \"mode_livraison\": [\"retrait_boutique\", \"livraison_locale\"]\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/vendeurs/profil",
+							"host": ["{{base_url}}"],
+							"path": ["api", "vendeurs", "profil"]
+						},
+						"description": "Mettre à jour les informations de sa boutique."
+					},
+					"response": []
+				},
+				{
+					"name": "Uploader Logo",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "logo",
+									"type": "file",
+									"src": "",
+									"description": "Sélectionner une image (jpeg/png/gif/webp, max 5MB)"
+								}
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/vendeurs/logo",
+							"host": ["{{base_url}}"],
+							"path": ["api", "vendeurs", "logo"]
+						},
+						"description": "Uploader ou remplacer le logo de la boutique. Format: multipart/form-data."
+					},
+					"response": []
+				},
+				{
+					"name": "Créer Zone Livraison",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('zone_id', jsonData.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom_zone\": \"Gombe - Centre ville\",\n    \"ville\": \"Kinshasa\",\n    \"delai_heures\": 4,\n    \"frais_livraison_cdf\": 5000,\n    \"frais_livraison_usd\": 2,\n    \"actif\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/vendeurs/zones-livraison",
+							"host": ["{{base_url}}"],
+							"path": ["api", "vendeurs", "zones-livraison"]
+						},
+						"description": "Ajouter une zone de livraison à sa boutique."
+					},
+					"response": []
+				},
+				{
+					"name": "Lister Zones Livraison",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/vendeurs/zones-livraison",
+							"host": ["{{base_url}}"],
+							"path": ["api", "vendeurs", "zones-livraison"]
+						},
+						"description": "Lister toutes les zones de livraison du vendeur."
+					},
+					"response": []
+				},
+				{
+					"name": "Modifier Zone Livraison",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom_zone\": \"Gombe - Mis à jour\",\n    \"frais_livraison_cdf\": 7500,\n    \"delai_heures\": 3\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/vendeurs/zones-livraison/{{zone_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "vendeurs", "zones-livraison", "{{zone_id}}"]
+						},
+						"description": "Modifier une zone de livraison existante."
+					},
+					"response": []
+				},
+				{
+					"name": "Supprimer Zone Livraison",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/vendeurs/zones-livraison/{{zone_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "vendeurs", "zones-livraison", "{{zone_id}}"]
+						},
+						"description": "Supprimer une zone de livraison."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📦 Produits",
+			"item": [
+				{
+					"name": "Recherche Produits (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/produits/recherche?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "produits", "recherche"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "20" },
+								{ "key": "q", "value": "samsung", "disabled": true },
+								{ "key": "ville", "value": "Kinshasa", "disabled": true },
+								{ "key": "categorie", "value": "électronique", "disabled": true },
+								{ "key": "prix_min", "value": "10000", "disabled": true },
+								{ "key": "prix_max", "value": "500000", "disabled": true },
+								{ "key": "promotion", "value": "true", "disabled": true }
+							]
+						},
+						"description": "Recherche publique de produits. Activer les query params pour filtrer."
+					},
+					"response": []
+				},
+				{
+					"name": "Voir Produit par Slug (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/produits/slug/{{produit_slug}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "produits", "slug", "{{produit_slug}}"]
+						},
+						"description": "Voir un produit par son slug. Incrémente le compteur de vues."
+					},
+					"response": []
+				},
+				{
+					"name": "Voir Produit par ID (Public)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/produits/{{produit_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "produits", "{{produit_id}}"]
+						},
+						"description": "Voir un produit par son ID. Ne modifie pas le compteur de vues."
+					},
+					"response": []
+				},
+				{
+					"name": "Mes Produits (Vendeur)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/produits/?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "produits", ""],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "20" },
+								{ "key": "categorie", "value": "électronique", "disabled": true },
+								{ "key": "disponible", "value": "true", "disabled": true }
+							]
+						},
+						"description": "Lister ses propres produits avec pagination et filtres."
+					},
+					"response": []
+				},
+				{
+					"name": "Créer Produit",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('produit_id', jsonData.produit.id);",
+									"    pm.collectionVariables.set('produit_slug', jsonData.produit.slug);",
+									"    pm.test('Produit créé', function() {",
+									"        pm.expect(jsonData.message).to.include('créé');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							}
+						],
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{ "key": "nom", "value": "Samsung Galaxy A15", "type": "text" },
+								{ "key": "description", "value": "Smartphone Samsung Galaxy A15, 128GB, 4GB RAM, écran 6.5 pouces", "type": "text" },
+								{ "key": "prix_cdf", "value": "350000", "type": "text" },
+								{ "key": "prix_usd", "value": "125", "type": "text" },
+								{ "key": "stock", "value": "25", "type": "text" },
+								{ "key": "categorie", "value": "smartphones", "type": "text" },
+								{ "key": "promotion", "value": "false", "type": "text" },
+								{ "key": "pourcentage_promotion", "value": "0", "type": "text" },
+								{ "key": "delai_preparation", "value": "1h", "type": "text" },
+								{ "key": "disponible", "value": "true", "type": "text" },
+								{ "key": "photos", "type": "file", "src": "", "description": "Sélectionner jusqu'à 5 images" }
+							]
+						},
+						"url": {
+							"raw": "{{base_url}}/api/produits/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "produits", ""]
+						},
+						"description": "Créer un nouveau produit avec photos. Format: multipart/form-data. Max 5 photos."
+					},
+					"response": []
+				},
+				{
+					"name": "Créer Produit (JSON sans photos)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('produit_id', jsonData.produit.id);",
+									"    pm.collectionVariables.set('produit_slug', jsonData.produit.slug);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Écouteurs Bluetooth JBL\",\n    \"description\": \"Écouteurs sans fil JBL Tune 520BT, autonomie 57h\",\n    \"prix_cdf\": 85000,\n    \"prix_usd\": 30,\n    \"stock\": 50,\n    \"categorie\": \"accessoires\",\n    \"promotion\": true,\n    \"pourcentage_promotion\": 15,\n    \"delai_preparation\": \"1h\",\n    \"disponible\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/produits/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "produits", ""]
+						},
+						"description": "Créer un produit sans photos (JSON). Utile pour tester rapidement."
+					},
+					"response": []
+				},
+				{
+					"name": "Modifier Produit",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Samsung Galaxy A15 - Promotion!\",\n    \"prix_cdf\": 300000,\n    \"promotion\": true,\n    \"pourcentage_promotion\": 15,\n    \"stock\": 20,\n    \"mis_en_avant\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/produits/{{produit_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "produits", "{{produit_id}}"]
+						},
+						"description": "Modifier un produit existant. Seuls les champs envoyés sont mis à jour."
+					},
+					"response": []
+				},
+				{
+					"name": "Supprimer Photo Produit",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"photoUrl\": \"/uploads/produits/votre-photo.jpg\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/produits/{{produit_id}}/photo",
+							"host": ["{{base_url}}"],
+							"path": ["api", "produits", "{{produit_id}}", "photo"]
+						},
+						"description": "Supprimer une photo spécifique d'un produit. Récupérer l'URL de la photo via GET produit."
+					},
+					"response": []
+				},
+				{
+					"name": "Supprimer Produit",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/produits/{{produit_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "produits", "{{produit_id}}"]
+						},
+						"description": "Supprimer définitivement un produit."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🛒 Commandes",
+			"item": [
+				{
+					"name": "Créer Commande (Client)",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('commande_id', jsonData.commande.id);",
+									"    pm.test('Commande créée', function() {",
+									"        pm.expect(jsonData.message).to.include('créée');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"vendeur_id\": {{vendeur_id}},\n    \"items\": [\n        {\n            \"produit_id\": {{produit_id}},\n            \"quantite\": 2\n        }\n    ],\n    \"devise\": \"CDF\",\n    \"mode_livraison\": \"livraison_locale\",\n    \"adresse_livraison\": \"Avenue Sendwe 45, Lubumbashi\",\n    \"telephone_livraison\": \"+243890000001\",\n    \"notes\": \"Appelez-moi 30 minutes avant la livraison\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/commandes/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "commandes", ""]
+						},
+						"description": "Passer une commande. Le stock est automatiquement décrémenté. ⚠️ Créer d'abord un produit avec du stock."
+					},
+					"response": []
+				},
+				{
+					"name": "Mes Commandes (Client)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/commandes/mes-commandes?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "commandes", "mes-commandes"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "20" },
+								{ "key": "statut", "value": "en_attente", "disabled": true }
+							]
+						},
+						"description": "Lister les commandes du client connecté."
+					},
+					"response": []
+				},
+				{
+					"name": "Annuler Commande (Client)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/commandes/{{commande_id}}/annuler",
+							"host": ["{{base_url}}"],
+							"path": ["api", "commandes", "{{commande_id}}", "annuler"]
+						},
+						"description": "Annuler une commande. Possible uniquement si statut = en_attente ou confirmée. Le stock est restauré."
+					},
+					"response": []
+				},
+				{
+					"name": "Commandes Reçues (Vendeur)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/commandes/vendeur?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "commandes", "vendeur"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "20" },
+								{ "key": "statut", "value": "en_attente", "disabled": true }
+							]
+						},
+						"description": "Lister les commandes reçues par le vendeur."
+					},
+					"response": []
+				},
+				{
+					"name": "Changer Statut Commande (Vendeur)",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"statut\": \"confirmée\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/commandes/{{commande_id}}/statut",
+							"host": ["{{base_url}}"],
+							"path": ["api", "commandes", "{{commande_id}}", "statut"]
+						},
+						"description": "Modifier le statut d'une commande.\nTransitions: en_attente → confirmée → préparation → en_cours → livrée\nOu: → annulée (sauf si déjà livrée)"
+					},
+					"response": []
+				},
+				{
+					"name": "Détail Commande",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}",
+								"description": "Utiliser vendeur_token ou client_token"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/commandes/{{commande_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "commandes", "{{commande_id}}"]
+						},
+						"description": "Voir le détail complet d'une commande (lignes, client, vendeur, paiement, livraison)."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "💳 Paiements",
+			"item": [
+				{
+					"name": "Initier Paiement Mobile Money",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('reference_transaction', jsonData.paiement.reference_transaction);",
+									"    pm.test('Paiement initié', function() {",
+									"        pm.expect(jsonData.message).to.include('initié');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"commande_id\": {{commande_id}},\n    \"mode_paiement\": \"mobile_money\",\n    \"operateur\": \"vodacom\",\n    \"numero_telephone\": \"+243810000001\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/paiements/initier",
+							"host": ["{{base_url}}"],
+							"path": ["api", "paiements", "initier"]
+						},
+						"description": "Initier un paiement Mobile Money. La référence de transaction est automatiquement sauvegardée."
+					},
+					"response": []
+				},
+				{
+					"name": "Initier Paiement à la Livraison",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('reference_transaction', jsonData.paiement.reference_transaction);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"commande_id\": {{commande_id}},\n    \"mode_paiement\": \"paiement_livraison\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/paiements/initier",
+							"host": ["{{base_url}}"],
+							"path": ["api", "paiements", "initier"]
+						},
+						"description": "Initier un paiement à la livraison (cash on delivery). Pas besoin d'opérateur ni de numéro."
+					},
+					"response": []
+				},
+				{
+					"name": "Confirmer Paiement (Webhook)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/paiements/confirmer/{{reference_transaction}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "paiements", "confirmer", "{{reference_transaction}}"]
+						},
+						"description": "Simuler la confirmation d'un paiement (webhook). La commande passe automatiquement en statut 'confirmée'."
+					},
+					"response": []
+				},
+				{
+					"name": "Échec Paiement (Webhook)",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/paiements/echec/{{reference_transaction}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "paiements", "echec", "{{reference_transaction}}"]
+						},
+						"description": "Simuler l'échec d'un paiement (webhook). Le client est notifié."
+					},
+					"response": []
+				},
+				{
+					"name": "Paiement par Commande",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}",
+								"description": "vendeur_token ou client_token"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/paiements/commande/{{commande_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "paiements", "commande", "{{commande_id}}"]
+						},
+						"description": "Voir le paiement associé à une commande spécifique."
+					},
+					"response": []
+				},
+				{
+					"name": "Historique Paiements (Vendeur)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/paiements/historique?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "paiements", "historique"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "20" },
+								{ "key": "statut", "value": "confirmé", "disabled": true }
+							]
+						},
+						"description": "Historique des paiements reçus par le vendeur."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🚚 Livraisons",
+			"item": [
+				{
+					"name": "Suivi Livraison (par commande)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}",
+								"description": "vendeur_token ou client_token"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/livraisons/commande/{{commande_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "livraisons", "commande", "{{commande_id}}"]
+						},
+						"description": "Suivre la livraison d'une commande spécifique."
+					},
+					"response": []
+				},
+				{
+					"name": "Mes Livraisons (Vendeur)",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/livraisons/vendeur?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "livraisons", "vendeur"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "20" },
+								{ "key": "statut", "value": "en_attente", "disabled": true }
+							]
+						},
+						"description": "Lister toutes les livraisons du vendeur avec filtres."
+					},
+					"response": []
+				},
+				{
+					"name": "Mettre à jour Livraison",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"statut\": \"expédiée\",\n    \"livreur_nom\": \"Patrick Mwamba\",\n    \"livreur_telephone\": \"+243850000001\",\n    \"notes\": \"Livraison prévue avant 18h\",\n    \"delai_estime_heures\": 4,\n    \"zone\": \"Gombe\",\n    \"frais_livraison\": 5000,\n    \"devise_frais\": \"CDF\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/livraisons/commande/{{commande_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "livraisons", "commande", "{{commande_id}}"]
+						},
+						"description": "Mettre à jour les informations de livraison. Les dates d'expédition et de livraison sont automatiquement remplies selon le statut."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "📊 Dashboard",
+			"item": [
+				{
+					"name": "Tableau de Bord Vendeur",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/dashboard/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "dashboard", ""]
+						},
+						"description": "Vue d'ensemble: chiffre d'affaires (jour/semaine/mois), commandes par statut, produits populaires, clients uniques."
+					},
+					"response": []
+				},
+				{
+					"name": "Statistiques Détaillées",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/dashboard/statistiques?periode=30",
+							"host": ["{{base_url}}"],
+							"path": ["api", "dashboard", "statistiques"],
+							"query": [
+								{ "key": "periode", "value": "30" },
+								{ "key": "date_debut", "value": "2025-01-01", "disabled": true },
+								{ "key": "date_fin", "value": "2025-06-30", "disabled": true }
+							]
+						},
+						"description": "Statistiques détaillées: évolution CA par jour, répartition par mode de paiement et opérateur."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "👤 Clients",
+			"item": [
+				{
+					"name": "Mon Profil Client",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/clients/profil",
+							"host": ["{{base_url}}"],
+							"path": ["api", "clients", "profil"]
+						},
+						"description": "Voir le profil du client connecté."
+					},
+					"response": []
+				},
+				{
+					"name": "Modifier Profil Client",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Kabwit\",\n    \"prenom\": \"Jean-Pierre\",\n    \"ville\": \"Lubumbashi\",\n    \"adresse\": \"Avenue Sendwe 45, Q/Lubumbashi\",\n    \"email\": \"jeanpierre.kabwit@gmail.com\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/clients/profil",
+							"host": ["{{base_url}}"],
+							"path": ["api", "clients", "profil"]
+						},
+						"description": "Modifier les informations du profil client."
+					},
+					"response": []
+				},
+				{
+					"name": "Changer Mot de Passe",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"ancien_mot_de_passe\": \"ClientPass123!\",\n    \"nouveau_mot_de_passe\": \"NouveauPass456!\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/clients/mot-de-passe",
+							"host": ["{{base_url}}"],
+							"path": ["api", "clients", "mot-de-passe"]
+						},
+						"description": "Changer le mot de passe du client. Le ancien_mot_de_passe est vérifié avant le changement."
+					},
+					"response": []
+				},
+				{
+					"name": "Historique Commandes Client",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/clients/historique?page=1&limit=20",
+							"host": ["{{base_url}}"],
+							"path": ["api", "clients", "historique"],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "20" }
+							]
+						},
+						"description": "Historique complet des commandes avec produits, vendeur et paiement."
+					},
+					"response": []
+				},
+				{
+					"name": "Facture Commande",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{client_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/clients/facture/{{commande_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "clients", "facture", "{{commande_id}}"]
+						},
+						"description": "Générer une facture détaillée pour une commande passée."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🔔 Notifications",
+			"item": [
+				{
+					"name": "Mes Notifications",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.notifications && jsonData.notifications.length > 0) {",
+									"        pm.collectionVariables.set('notification_id', jsonData.notifications[0].id);",
+									"    }",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}",
+								"description": "vendeur_token ou client_token"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/notifications/?page=1&limit=30",
+							"host": ["{{base_url}}"],
+							"path": ["api", "notifications", ""],
+							"query": [
+								{ "key": "page", "value": "1" },
+								{ "key": "limit", "value": "30" },
+								{ "key": "lu", "value": "false", "disabled": true }
+							]
+						},
+						"description": "Lister les notifications avec le compteur de non lues. Filtrer par lu=true/false."
+					},
+					"response": []
+				},
+				{
+					"name": "Marquer Tout Comme Lu",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/notifications/lire-tout",
+							"host": ["{{base_url}}"],
+							"path": ["api", "notifications", "lire-tout"]
+						},
+						"description": "Marquer toutes les notifications comme lues."
+					},
+					"response": []
+				},
+				{
+					"name": "Marquer Notification Comme Lue",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/notifications/{{notification_id}}/lire",
+							"host": ["{{base_url}}"],
+							"path": ["api", "notifications", "{{notification_id}}", "lire"]
+						},
+						"description": "Marquer une notification spécifique comme lue."
+					},
+					"response": []
+				},
+				{
+					"name": "Supprimer Notification",
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer {{vendeur_token}}"
+							}
+						],
+						"url": {
+							"raw": "{{base_url}}/api/notifications/{{notification_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "notifications", "{{notification_id}}"]
+						},
+						"description": "Supprimer une notification."
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "🧪 Scénario Complet",
+			"description": "Exécuter ces requêtes dans l'ordre pour tester un flux complet vendeur → client → commande → paiement → livraison",
+			"item": [
+				{
+					"name": "1. Inscription Vendeur",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('vendeur_token', jsonData.token);",
+									"    pm.collectionVariables.set('vendeur_id', jsonData.vendeur.id);",
+									"    pm.collectionVariables.set('boutique_slug', jsonData.vendeur.slug);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom_boutique\": \"Electro Shop Kinshasa\",\n    \"type_boutique\": \"détaillant\",\n    \"telephone\": \"+243811111111\",\n    \"email\": \"electro.shop@test.cd\",\n    \"mot_de_passe\": \"Test123456!\",\n    \"ville\": \"Kinshasa\",\n    \"categorie_boutique\": \"électronique\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/vendeur/inscription",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "vendeur", "inscription"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "2. Créer un Produit",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('produit_id', jsonData.produit.id);",
+									"    pm.collectionVariables.set('produit_slug', jsonData.produit.slug);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{vendeur_token}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"iPhone 15 Pro Max\",\n    \"description\": \"Apple iPhone 15 Pro Max, 256GB, Titane Naturel\",\n    \"prix_cdf\": 2800000,\n    \"prix_usd\": 999,\n    \"stock\": 10,\n    \"categorie\": \"smartphones\",\n    \"delai_preparation\": \"1h\",\n    \"disponible\": true\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/produits/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "produits", ""]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "3. Inscription Client",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('client_token', jsonData.token);",
+									"    pm.collectionVariables.set('client_id', jsonData.client.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [{ "key": "Content-Type", "value": "application/json" }],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nom\": \"Mwamba\",\n    \"prenom\": \"Patrick\",\n    \"telephone\": \"+243822222222\",\n    \"mot_de_passe\": \"Client123!\",\n    \"ville\": \"Kinshasa\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/auth/client/inscription",
+							"host": ["{{base_url}}"],
+							"path": ["api", "auth", "client", "inscription"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "4. Passer une Commande",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('commande_id', jsonData.commande.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{client_token}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"vendeur_id\": {{vendeur_id}},\n    \"items\": [\n        { \"produit_id\": {{produit_id}}, \"quantite\": 1 }\n    ],\n    \"devise\": \"USD\",\n    \"mode_livraison\": \"livraison_locale\",\n    \"adresse_livraison\": \"12 Avenue de la Paix, Gombe, Kinshasa\",\n    \"telephone_livraison\": \"+243822222222\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/commandes/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "commandes", ""]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "5. Initier Paiement",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    var jsonData = pm.response.json();",
+									"    pm.collectionVariables.set('reference_transaction', jsonData.paiement.reference_transaction);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{client_token}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"commande_id\": {{commande_id}},\n    \"mode_paiement\": \"mobile_money\",\n    \"operateur\": \"vodacom\",\n    \"numero_telephone\": \"+243810000001\"\n}"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/paiements/initier",
+							"host": ["{{base_url}}"],
+							"path": ["api", "paiements", "initier"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "6. Confirmer Paiement",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/api/paiements/confirmer/{{reference_transaction}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "paiements", "confirmer", "{{reference_transaction}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "7. Vendeur → Préparation",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{vendeur_token}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"statut\": \"préparation\" }"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/commandes/{{commande_id}}/statut",
+							"host": ["{{base_url}}"],
+							"path": ["api", "commandes", "{{commande_id}}", "statut"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "8. Vendeur → En cours de livraison",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{vendeur_token}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"statut\": \"en_cours\" }"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/commandes/{{commande_id}}/statut",
+							"host": ["{{base_url}}"],
+							"path": ["api", "commandes", "{{commande_id}}", "statut"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "9. Vendeur → Livrée ✅",
+					"request": {
+						"method": "PUT",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{vendeur_token}}" },
+							{ "key": "Content-Type", "value": "application/json" }
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{ \"statut\": \"livrée\" }"
+						},
+						"url": {
+							"raw": "{{base_url}}/api/commandes/{{commande_id}}/statut",
+							"host": ["{{base_url}}"],
+							"path": ["api", "commandes", "{{commande_id}}", "statut"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "10. Voir Facture",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{client_token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/api/clients/facture/{{commande_id}}",
+							"host": ["{{base_url}}"],
+							"path": ["api", "clients", "facture", "{{commande_id}}"]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "11. Dashboard Vendeur",
+					"request": {
+						"method": "GET",
+						"header": [
+							{ "key": "Authorization", "value": "Bearer {{vendeur_token}}" }
+						],
+						"url": {
+							"raw": "{{base_url}}/api/dashboard/",
+							"host": ["{{base_url}}"],
+							"path": ["api", "dashboard", ""]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
