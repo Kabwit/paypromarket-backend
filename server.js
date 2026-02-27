@@ -15,7 +15,24 @@ const { sequelize } = require('./models');
 // =============================================
 // SÉCURITÉ & MIDDLEWARES
 // =============================================
-app.use(helmet());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "blob:"],
+      styleSrc: ["'self'", "'unsafe-inline'", "https://cdnjs.cloudflare.com", "https://fonts.googleapis.com"],
+      fontSrc: ["'self'", "https://cdnjs.cloudflare.com", "https://fonts.gstatic.com", "data:"],
+      imgSrc: ["'self'", "data:", "blob:", "https:"],
+      connectSrc: ["'self'", "https://www.gstatic.com", "https://fonts.googleapis.com", "https://fonts.gstatic.com", "ws:", "wss:"],
+      workerSrc: ["'self'", "blob:"],
+      childSrc: ["'self'", "blob:"],
+      frameSrc: ["'self'", "blob:"],
+      upgradeInsecureRequests: null,
+    }
+  },
+  crossOriginEmbedderPolicy: false,
+  crossOriginOpenerPolicy: false,
+}));
 app.use(cors());
 app.use(morgan('dev'));
 app.use(express.json({ limit: '10mb' }));
@@ -70,6 +87,29 @@ app.use('/api/clients', require('./routes/client'));
 // Notifications
 app.use('/api/notifications', require('./routes/notification'));
 
+// Administration (panel admin)
+app.use('/api/admin', require('./routes/admin'));
+
+// =============================================
+// PANNEAU ADMIN (interface web)
+// =============================================
+app.use('/admin', express.static(path.join(__dirname, 'admin')));
+
+// =============================================
+// APPLICATION WEB (Client/Vendeur)
+// =============================================
+app.use('/app', express.static(path.join(__dirname, 'webapp')));
+app.get('/app/{*splat}', (req, res) => {
+  res.sendFile(path.join(__dirname, 'webapp', 'index.html'));
+});
+
+// =============================================
+// BOUTIQUE PUBLIQUE (page vitrine partageable)
+// =============================================
+app.get('/boutique/:slug', (req, res) => {
+  res.sendFile(path.join(__dirname, 'webapp', 'boutique.html'));
+});
+
 // =============================================
 // ROUTE D'ACCUEIL
 // =============================================
@@ -77,6 +117,9 @@ app.get('/', (req, res) => {
   res.json({
     message: 'PayPro Market RDC - API Backend',
     version: '1.0.0',
+    admin_panel: '/admin',
+    app: '/app',
+    boutique: '/boutique/:slug',
     documentation: {
       auth: '/api/auth',
       vendeurs: '/api/vendeurs',
@@ -86,7 +129,8 @@ app.get('/', (req, res) => {
       livraisons: '/api/livraisons',
       dashboard: '/api/dashboard',
       clients: '/api/clients',
-      notifications: '/api/notifications'
+      notifications: '/api/notifications',
+      admin: '/api/admin'
     }
   });
 });
@@ -114,9 +158,10 @@ const PORT = process.env.PORT || 5000;
 sequelize.sync({ alter: true })
   .then(() => {
     console.log('✅ Base de données synchronisée');
-    app.listen(PORT, () => {
+    app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Serveur PayPro Market démarré sur le port ${PORT}`);
-      console.log(`📍 http://localhost:${PORT}`);
+      console.log(`📍 Local:   http://localhost:${PORT}`);
+      console.log(`📍 Réseau:  http://192.168.1.121:${PORT}`);
     });
   })
   .catch(err => {

@@ -33,3 +33,6 @@ build/
 
 # Coverage tests
 coverage/
+
+# Flutter web build (obsolete)
+public/

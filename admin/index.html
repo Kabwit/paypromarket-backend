@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PayPro Market - Admin</title>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #1B5E20;
+      --primary-light: #2E7D32;
+      --primary-dark: #0D3B12;
+      --accent: #FF9800;
+      --accent-light: #FFB74D;
+      --bg: #f0f2f5;
+      --card: #ffffff;
+      --text: #1a1a2e;
+      --text-light: #6b7280;
+      --border: #e5e7eb;
+      --danger: #ef4444;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --info: #3b82f6;
+      --sidebar-width: 260px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ===== LOGIN PAGE ===== */
+    .login-page {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 50%, var(--primary-light) 100%);
+    }
+
+    .login-card {
+      background: white;
+      border-radius: 16px;
+      padding: 48px;
+      width: 100%;
+      max-width: 420px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+
+    .login-card .logo {
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .login-card .logo h1 {
+      color: var(--primary);
+      font-size: 28px;
+      font-weight: 700;
+    }
+
+    .login-card .logo span {
+      color: var(--accent);
+    }
+
+    .login-card .logo p {
+      color: var(--text-light);
+      margin-top: 4px;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+      padding: 12px 16px;
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    .form-group input:focus, .form-group select:focus {
+      border-color: var(--primary);
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: inherit;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+      width: 100%;
+      justify-content: center;
+      padding: 14px;
+      font-size: 16px;
+    }
+
+    .btn-primary:hover { background: var(--primary-light); }
+
+    .btn-sm {
+      padding: 8px 16px;
+      font-size: 13px;
+      border-radius: 8px;
+    }
+
+    .btn-success { background: var(--success); color: white; }
+    .btn-danger { background: var(--danger); color: white; }
+    .btn-warning { background: var(--warning); color: white; }
+    .btn-info { background: var(--info); color: white; }
+    .btn-outline {
+      background: transparent;
+      border: 2px solid var(--border);
+      color: var(--text);
+    }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+
+    .login-error {
+      background: #fef2f2;
+      color: var(--danger);
+      padding: 12px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    /* ===== LAYOUT ===== */
+    .app { display: none; }
+    .app.active { display: flex; min-height: 100vh; }
+
+    /* ===== SIDEBAR ===== */
+    .sidebar {
+      width: var(--sidebar-width);
+      background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
+      color: white;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      overflow-y: auto;
+      z-index: 100;
+    }
+
+    .sidebar-header {
+      padding: 24px 20px;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .sidebar-header h2 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .sidebar-header h2 span { color: var(--accent); }
+
+    .sidebar-header p {
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      margin-top: 4px;
+    }
+
+    .sidebar-nav { padding: 16px 12px; }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      color: rgba(255,255,255,0.7);
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+
+    .nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+    .nav-item.active { background: rgba(255,255,255,0.15); color: white; }
+    .nav-item i { width: 20px; text-align: center; font-size: 16px; }
+
+    .nav-separator {
+      height: 1px;
+      background: rgba(255,255,255,0.1);
+      margin: 12px 16px;
+    }
+
+    .sidebar-footer {
+      padding: 16px 12px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+      position: absolute;
+      bottom: 0;
+      width: 100%;
+    }
+
+    /* ===== MAIN CONTENT ===== */
+    .main {
+      margin-left: var(--sidebar-width);
+      flex: 1;
+      min-height: 100vh;
+    }
+
+    .topbar {
+      background: white;
+      padding: 16px 32px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .topbar h2 { font-size: 20px; font-weight: 600; }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .admin-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--bg);
+      padding: 8px 16px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .admin-badge i { color: var(--primary); }
+
+    .content { padding: 32px; }
+
+    /* ===== STATS CARDS ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 20px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+      transition: transform 0.2s;
+    }
+
+    .stat-card:hover { transform: translateY(-2px); }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      flex-shrink: 0;
+    }
+
+    .stat-icon.green { background: #dcfce7; color: var(--primary); }
+    .stat-icon.blue { background: #dbeafe; color: var(--info); }
+    .stat-icon.orange { background: #ffedd5; color: var(--accent); }
+    .stat-icon.red { background: #fee2e2; color: var(--danger); }
+
+    .stat-info h3 { font-size: 28px; font-weight: 700; line-height: 1; }
+    .stat-info p { font-size: 13px; color: var(--text-light); margin-top: 4px; }
+    .stat-info .sub { font-size: 12px; color: var(--success); margin-top: 4px; }
+
+    /* ===== TABLES ===== */
+    .card {
+      background: white;
+      border-radius: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+      margin-bottom: 24px;
+    }
+
+    .card-header {
+      padding: 20px 24px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .card-header h3 { font-size: 16px; font-weight: 600; }
+
+    .card-body { padding: 0; }
+    .card-body.padded { padding: 24px; }
+
+    .search-bar {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .search-bar input {
+      padding: 8px 16px;
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      font-size: 14px;
+      outline: none;
+      min-width: 240px;
+      font-family: inherit;
+    }
+
+    .search-bar input:focus { border-color: var(--primary); }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 14px 20px;
+      text-align: left;
+      font-size: 14px;
+    }
+
+    th {
+      background: #f9fafb;
+      font-weight: 600;
+      color: var(--text-light);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    tr { border-bottom: 1px solid var(--border); }
+    tr:last-child { border: none; }
+    tr:hover { background: #f9fafb; }
+
+    .badge {
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .badge-success { background: #dcfce7; color: #166534; }
+    .badge-danger { background: #fee2e2; color: #991b1b; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-info { background: #dbeafe; color: #1e40af; }
+    .badge-neutral { background: #f3f4f6; color: #374151; }
+
+    .actions { display: flex; gap: 8px; }
+
+    .action-btn {
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      transition: opacity 0.2s;
+    }
+
+    .action-btn:hover { opacity: 0.8; }
+    .action-btn.view { background: #dbeafe; color: var(--info); }
+    .action-btn.toggle { background: #fef3c7; color: var(--warning); }
+    .action-btn.delete { background: #fee2e2; color: var(--danger); }
+
+    /* ===== PAGINATION ===== */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-top: 1px solid var(--border);
+    }
+
+    .pagination-info { font-size: 14px; color: var(--text-light); }
+
+    .pagination-btns {
+      display: flex;
+      gap: 8px;
+    }
+
+    .page-btn {
+      padding: 8px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: white;
+      cursor: pointer;
+      font-size: 14px;
+      font-family: inherit;
+    }
+
+    .page-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .page-btn:disabled { opacity: 0.5; cursor: default; }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 200;
+    }
+
+    .modal-overlay.active { display: flex; }
+
+    .modal {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      max-width: 560px;
+      width: 90%;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .modal h3 {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      justify-content: flex-end;
+      margin-top: 24px;
+    }
+
+    /* ===== DETAIL PANEL ===== */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .detail-item label {
+      font-size: 12px;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .detail-item p {
+      font-size: 15px;
+      font-weight: 500;
+      margin-top: 2px;
+    }
+
+    /* ===== PAGES ===== */
+    .page { display: none; }
+    .page.active { display: block; }
+
+    /* ===== LOADING ===== */
+    .loading-spinner {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 60px;
+      color: var(--text-light);
+      font-size: 14px;
+      gap: 12px;
+    }
+
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 768px) {
+      .sidebar { transform: translateX(-100%); transition: transform 0.3s; }
+      .sidebar.open { transform: translateX(0); }
+      .main { margin-left: 0; }
+      .content { padding: 16px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      table { font-size: 13px; }
+      th, td { padding: 10px 12px; }
+    }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--text-light);
+    }
+
+    .empty-state i { font-size: 48px; margin-bottom: 16px; }
+    .empty-state p { font-size: 16px; }
+
+    /* ===== TOAST ===== */
+    .toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 999;
+    }
+
+    .toast {
+      background: white;
+      padding: 16px 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      animation: toastIn 0.3s ease;
+      min-width: 280px;
+    }
+
+    .toast.success { border-left: 4px solid var(--success); }
+    .toast.error { border-left: 4px solid var(--danger); }
+    .toast.warning { border-left: 4px solid var(--warning); }
+
+    @keyframes toastIn {
+      from { opacity: 0; transform: translateX(50px); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- TOAST CONTAINER -->
+  <div class="toast-container" id="toastContainer"></div>
+
+  <!-- ===== LOGIN PAGE ===== -->
+  <div class="login-page" id="loginPage">
+    <div class="login-card">
+      <div class="logo">
+        <h1>PayPro <span>Market</span></h1>
+        <p>Administration - RDC</p>
+      </div>
+      <div class="login-error" id="loginError"></div>
+      <form id="loginForm">
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="loginEmail" placeholder="admin@paypromarket.com" required>
+        </div>
+        <div class="form-group">
+          <label>Mot de passe</label>
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
+        </div>
+        <button type="submit" class="btn btn-primary">
+          <i class="fas fa-lock"></i> Se connecter
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ===== MAIN APP ===== -->
+  <div class="app" id="app">
+
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <h2>PayPro <span>Market</span></h2>
+        <p>Panneau d'administration</p>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-item active" data-page="dashboard">
+          <i class="fas fa-chart-pie"></i> Tableau de bord
+        </div>
+        <div class="nav-item" data-page="vendeurs">
+          <i class="fas fa-store"></i> Vendeurs
+        </div>
+        <div class="nav-item" data-page="clients">
+          <i class="fas fa-users"></i> Clients
+        </div>
+        <div class="nav-item" data-page="produits">
+          <i class="fas fa-box"></i> Produits
+        </div>
+        <div class="nav-item" data-page="commandes">
+          <i class="fas fa-shopping-cart"></i> Commandes
+        </div>
+        <div class="nav-item" data-page="paiements">
+          <i class="fas fa-money-bill-wave"></i> Paiements
+        </div>
+        <div class="nav-separator"></div>
+        <div class="nav-item" data-page="admins">
+          <i class="fas fa-user-shield"></i> Administrateurs
+        </div>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="nav-item" id="logoutBtn">
+          <i class="fas fa-sign-out-alt"></i> Déconnexion
+        </div>
+      </div>
+    </aside>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+      <div class="topbar">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <button class="btn btn-outline btn-sm" id="menuToggle" style="display:none;">
+            <i class="fas fa-bars"></i>
+          </button>
+          <h2 id="pageTitle">Tableau de bord</h2>
+        </div>
+        <div class="topbar-right">
+          <div class="admin-badge">
+            <i class="fas fa-user-shield"></i>
+            <span id="adminName">Admin</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="content">
+
+        <!-- ===== PAGE: DASHBOARD ===== -->
+        <div class="page active" id="page-dashboard">
+          <div class="stats-grid" id="dashboardStats">
+            <div class="loading-spinner"><div class="spinner"></div> Chargement...</div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-clock"></i> Dernières commandes</h3>
+            </div>
+            <div class="card-body" id="recentOrders">
+              <div class="loading-spinner"><div class="spinner"></div> Chargement...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== PAGE: VENDEURS ===== -->
+        <div class="page" id="page-vendeurs">
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-store"></i> Liste des vendeurs</h3>
+              <div class="search-bar">
+                <input type="text" placeholder="Rechercher un vendeur..." id="searchVendeur">
+              </div>
+            </div>
+            <div class="card-body" id="vendeursTable">
+              <div class="loading-spinner"><div class="spinner"></div> Chargement...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== PAGE: CLIENTS ===== -->
+        <div class="page" id="page-clients">
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-users"></i> Liste des clients</h3>
+              <div class="search-bar">
+                <input type="text" placeholder="Rechercher un client..." id="searchClient">
+              </div>
+            </div>
+            <div class="card-body" id="clientsTable">
+              <div class="loading-spinner"><div class="spinner"></div> Chargement...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== PAGE: PRODUITS ===== -->
+        <div class="page" id="page-produits">
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-box"></i> Tous les produits</h3>
+              <div class="search-bar">
+                <input type="text" placeholder="Rechercher un produit..." id="searchProduit">
+              </div>
+            </div>
+            <div class="card-body" id="produitsTable">
+              <div class="loading-spinner"><div class="spinner"></div> Chargement...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== PAGE: COMMANDES ===== -->
+        <div class="page" id="page-commandes">
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-shopping-cart"></i> Toutes les commandes</h3>
+              <div class="search-bar">
+                <select id="filterStatut" style="padding:8px 16px;border:2px solid var(--border);border-radius:8px;font-size:14px;font-family:inherit;">
+                  <option value="">Tous les statuts</option>
+                  <option value="en_attente">En attente</option>
+                  <option value="confirmée">Confirmée</option>
+                  <option value="en_preparation">En préparation</option>
+                  <option value="en_livraison">En livraison</option>
+                  <option value="livrée">Livrée</option>
+                  <option value="annulée">Annulée</option>
+                </select>
+              </div>
+            </div>
+            <div class="card-body" id="commandesTable">
+              <div class="loading-spinner"><div class="spinner"></div> Chargement...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== PAGE: PAIEMENTS ===== -->
+        <div class="page" id="page-paiements">
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-money-bill-wave"></i> Tous les paiements</h3>
+            </div>
+            <div class="card-body" id="paiementsTable">
+              <div class="loading-spinner"><div class="spinner"></div> Chargement...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== PAGE: ADMINS ===== -->
+        <div class="page" id="page-admins">
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-user-shield"></i> Administrateurs</h3>
+              <button class="btn btn-sm btn-primary" onclick="showAddAdminModal()">
+                <i class="fas fa-plus"></i> Ajouter
+              </button>
+            </div>
+            <div class="card-body" id="adminsTable">
+              <div class="loading-spinner"><div class="spinner"></div> Chargement...</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: DETAIL ===== -->
+  <div class="modal-overlay" id="detailModal">
+    <div class="modal">
+      <h3 id="detailTitle">Détails</h3>
+      <div id="detailContent"></div>
+      <div class="modal-actions">
+        <button class="btn btn-outline btn-sm" onclick="closeModal('detailModal')">Fermer</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MODAL: ADD ADMIN ===== -->
+  <div class="modal-overlay" id="addAdminModal">
+    <div class="modal">
+      <h3>Ajouter un administrateur</h3>
+      <form id="addAdminForm">
+        <div class="form-group">
+          <label>Nom complet</label>
+          <input type="text" id="newAdminNom" required>
+        </div>
+        <div class="form-group">
+          <label>Email</label>
+          <input type="email" id="newAdminEmail" required>
+        </div>
+        <div class="form-group">
+          <label>Mot de passe</label>
+          <input type="password" id="newAdminPassword" required>
+        </div>
+        <div class="form-group">
+          <label>Rôle</label>
+          <select id="newAdminRole">
+            <option value="admin">Admin</option>
+            <option value="moderateur">Modérateur</option>
+            <option value="super_admin">Super Admin</option>
+          </select>
+        </div>
+        <div class="modal-actions">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closeModal('addAdminModal')">Annuler</button>
+          <button type="submit" class="btn btn-primary btn-sm">Créer</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    // =============================================
+    // CONFIGURATION
+    // =============================================
+    const API_BASE = window.location.origin + '/api/admin';
+    let token = localStorage.getItem('admin_token');
+    let currentAdmin = null;
+
+    // =============================================
+    // API HELPERS
+    // =============================================
+    async function api(endpoint, options = {}) {
+      try {
+        const res = await fetch(`${API_BASE}${endpoint}`, {
+          ...options,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+            ...options.headers
+          }
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          if (res.status === 401) { logout(); throw new Error('Session expirée'); }
+          throw new Error(data.error || 'Erreur serveur');
+        }
+        return data;
+      } catch (err) {
+        if (err.message === 'Failed to fetch') {
+          throw new Error('Impossible de contacter le serveur');
+        }
+        throw err;
+      }
+    }
+
+    // =============================================
+    // TOAST NOTIFICATIONS
+    // =============================================
+    function showToast(message, type = 'success') {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'exclamation-circle' : 'exclamation-triangle';
+      toast.innerHTML = `<i class="fas fa-${icon}"></i> ${message}`;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    // =============================================
+    // AUTH
+    // =============================================
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('loginEmail').value;
+      const mot_de_passe = document.getElementById('loginPassword').value;
+      const errorEl = document.getElementById('loginError');
+
+      try {
+        const data = await fetch(`${API_BASE}/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, mot_de_passe })
+        }).then(r => r.json());
+
+        if (data.error) throw new Error(data.error);
+
+        token = data.token;
+        currentAdmin = data.admin;
+        localStorage.setItem('admin_token', token);
+        localStorage.setItem('admin_info', JSON.stringify(currentAdmin));
+        showApp();
+      } catch (err) {
+        errorEl.textContent = err.message;
+        errorEl.style.display = 'block';
+      }
+    });
+
+    function showApp() {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('app').classList.add('active');
+      document.getElementById('adminName').textContent = currentAdmin?.nom || 'Admin';
+      loadPage('dashboard');
+    }
+
+    function logout() {
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_info');
+      token = null;
+      currentAdmin = null;
+      document.getElementById('loginPage').style.display = 'flex';
+      document.getElementById('app').classList.remove('active');
+    }
+
+    // Check stored session on load
+    if (token) {
+      try {
+        currentAdmin = JSON.parse(localStorage.getItem('admin_info'));
+        showApp();
+      } catch (e) { logout(); }
+    }
+
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+
+    // =============================================
+    // NAVIGATION
+    // =============================================
+    const navItems = document.querySelectorAll('.nav-item[data-page]');
+    const pageTitles = {
+      dashboard: 'Tableau de bord',
+      vendeurs: 'Gestion des vendeurs',
+      clients: 'Gestion des clients',
+      produits: 'Gestion des produits',
+      commandes: 'Gestion des commandes',
+      paiements: 'Gestion des paiements',
+      admins: 'Administrateurs'
+    };
+
+    navItems.forEach(item => {
+      item.addEventListener('click', () => {
+        const page = item.dataset.page;
+        navItems.forEach(n => n.classList.remove('active'));
+        item.classList.add('active');
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.getElementById(`page-${page}`).classList.add('active');
+        document.getElementById('pageTitle').textContent = pageTitles[page] || page;
+        loadPage(page);
+      });
+    });
+
+    function loadPage(page) {
+      switch (page) {
+        case 'dashboard': loadDashboard(); break;
+        case 'vendeurs': loadVendeurs(); break;
+        case 'clients': loadClients(); break;
+        case 'produits': loadProduits(); break;
+        case 'commandes': loadCommandes(); break;
+        case 'paiements': loadPaiements(); break;
+        case 'admins': loadAdmins(); break;
+      }
+    }
+
+    // =============================================
+    // DASHBOARD
+    // =============================================
+    async function loadDashboard() {
+      try {
+        const data = await api('/dashboard');
+        const u = data.utilisateurs;
+        const c = data.commandes;
+        const ca = data.chiffre_affaires;
+
+        document.getElementById('dashboardStats').innerHTML = `
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="fas fa-store"></i></div>
+            <div class="stat-info">
+              <h3>${u.vendeurs.total}</h3>
+              <p>Vendeurs</p>
+              <div class="sub">${u.vendeurs.actifs} actifs · +${u.vendeurs.nouveaux_aujourdhui} aujourd'hui</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-users"></i></div>
+            <div class="stat-info">
+              <h3>${u.clients.total}</h3>
+              <p>Clients</p>
+              <div class="sub">${u.clients.actifs} actifs · +${u.clients.nouveaux_aujourdhui} aujourd'hui</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange"><i class="fas fa-box"></i></div>
+            <div class="stat-info">
+              <h3>${data.produits.total}</h3>
+              <p>Produits</p>
+              <div class="sub">${data.produits.disponibles} disponibles</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="fas fa-shopping-cart"></i></div>
+            <div class="stat-info">
+              <h3>${c.total}</h3>
+              <p>Commandes totales</p>
+              <div class="sub">${c.aujourdhui} aujourd'hui · ${c.semaine} cette semaine</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon orange"><i class="fas fa-money-bill-wave"></i></div>
+            <div class="stat-info">
+              <h3>${formatMoney(ca.journalier)}</h3>
+              <p>CA Aujourd'hui</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon blue"><i class="fas fa-chart-line"></i></div>
+            <div class="stat-info">
+              <h3>${formatMoney(ca.hebdomadaire)}</h3>
+              <p>CA Semaine</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon green"><i class="fas fa-calendar-alt"></i></div>
+            <div class="stat-info">
+              <h3>${formatMoney(ca.mensuel)}</h3>
+              <p>CA Mois</p>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon red"><i class="fas fa-coins"></i></div>
+            <div class="stat-info">
+              <h3>${formatMoney(ca.total)}</h3>
+              <p>CA Total</p>
+            </div>
+          </div>
+        `;
+
+        // Dernières commandes
+        const orders = data.dernieres_commandes;
+        if (orders.length === 0) {
+          document.getElementById('recentOrders').innerHTML = '<div class="empty-state"><i class="fas fa-inbox"></i><p>Aucune commande</p></div>';
+          return;
+        }
+
+        document.getElementById('recentOrders').innerHTML = `
+          <table>
+            <thead><tr><th>ID</th><th>Client</th><th>Vendeur</th><th>Montant</th><th>Statut</th><th>Date</th></tr></thead>
+            <tbody>
+              ${orders.map(o => `
+                <tr>
+                  <td>#${o.id}</td>
+                  <td>${o.client?.nom || ''} ${o.client?.prenom || ''}</td>
+                  <td>${o.vendeur?.nom_boutique || ''}</td>
+                  <td>${formatMoney(o.montant_total)}</td>
+                  <td>${statutBadge(o.statut)}</td>
+                  <td>${formatDate(o.createdAt)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (err) {
+        showToast(err.message, 'error');
+        document.getElementById('dashboardStats').innerHTML = `<div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Erreur: ${err.message}</p><button class="btn btn-sm btn-primary" onclick="loadDashboard()" style="margin-top:12px"><i class="fas fa-redo"></i> Réessayer</button></div>`;
+        document.getElementById('recentOrders').innerHTML = '';
+      }
+    }
+
+    // =============================================
+    // VENDEURS
+    // =============================================
+    let vendeursPage = 1;
+
+    async function loadVendeurs(page = 1, search = '') {
+      vendeursPage = page;
+      try {
+        const params = new URLSearchParams({ page, limit: 15 });
+        if (search) params.set('search', search);
+        const data = await api(`/vendeurs?${params}`);
+
+        if (data.vendeurs.length === 0) {
+          document.getElementById('vendeursTable').innerHTML = '<div class="empty-state"><i class="fas fa-store"></i><p>Aucun vendeur trouvé</p></div>';
+          return;
+        }
+
+        document.getElementById('vendeursTable').innerHTML = `
+          <table>
+            <thead><tr><th>Boutique</th><th>Email</th><th>Téléphone</th><th>Ville</th><th>Produits</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${data.vendeurs.map(v => `
+                <tr>
+                  <td><strong>${v.nom_boutique}</strong></td>
+                  <td>${v.email}</td>
+                  <td>${v.telephone}</td>
+                  <td>${v.ville}</td>
+                  <td>${v.produits?.length || 0}</td>
+                  <td>${v.actif ? '<span class="badge badge-success">Actif</span>' : '<span class="badge badge-danger">Inactif</span>'}</td>
+                  <td class="actions">
+                    <button class="action-btn view" title="Détails" onclick="viewVendeur(${v.id})"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn toggle" title="${v.actif ? 'Désactiver' : 'Activer'}" onclick="toggleVendeur(${v.id})"><i class="fas fa-${v.actif ? 'ban' : 'check'}"></i></button>
+                    <button class="action-btn delete" title="Supprimer" onclick="deleteVendeur(${v.id}, '${v.nom_boutique}')"><i class="fas fa-trash"></i></button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          ${renderPagination(data.pagination, 'loadVendeurs')}
+        `;
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function viewVendeur(id) {
+      try {
+        const data = await api(`/vendeurs/${id}`);
+        const v = data.vendeur;
+        document.getElementById('detailTitle').textContent = v.nom_boutique;
+        document.getElementById('detailContent').innerHTML = `
+          <div class="detail-grid">
+            <div class="detail-item"><label>Email</label><p>${v.email}</p></div>
+            <div class="detail-item"><label>Téléphone</label><p>${v.telephone}</p></div>
+            <div class="detail-item"><label>Ville</label><p>${v.ville}</p></div>
+            <div class="detail-item"><label>Type</label><p>${v.type_boutique}</p></div>
+            <div class="detail-item"><label>Catégorie</label><p>${v.categorie_boutique}</p></div>
+            <div class="detail-item"><label>Statut</label><p>${v.actif ? '✅ Actif' : '❌ Inactif'}</p></div>
+            <div class="detail-item"><label>Produits</label><p>${v.produits?.length || 0}</p></div>
+            <div class="detail-item"><label>Commandes</label><p>${v.commandes?.length || 0}</p></div>
+            <div class="detail-item"><label>CA Total</label><p>${formatMoney(data.stats.chiffre_affaires_total)}</p></div>
+            <div class="detail-item"><label>Inscrit le</label><p>${formatDate(v.createdAt)}</p></div>
+          </div>
+          ${v.description ? `<div style="margin-top:16px"><label style="font-size:12px;color:var(--text-light);text-transform:uppercase;font-weight:600;">Description</label><p style="margin-top:4px">${v.description}</p></div>` : ''}
+        `;
+        openModal('detailModal');
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function toggleVendeur(id) {
+      try {
+        const data = await api(`/vendeurs/${id}/toggle`, { method: 'PATCH' });
+        showToast(data.message);
+        loadVendeurs(vendeursPage);
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function deleteVendeur(id, nom) {
+      if (!confirm(`Supprimer le vendeur "${nom}" ? Cette action est irréversible.`)) return;
+      try {
+        const data = await api(`/vendeurs/${id}`, { method: 'DELETE' });
+        showToast(data.message);
+        loadVendeurs(vendeursPage);
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // Search
+    let searchVendeurTimeout;
+    document.getElementById('searchVendeur').addEventListener('input', (e) => {
+      clearTimeout(searchVendeurTimeout);
+      searchVendeurTimeout = setTimeout(() => loadVendeurs(1, e.target.value), 500);
+    });
+
+    // =============================================
+    // CLIENTS
+    // =============================================
+    let clientsPage = 1;
+
+    async function loadClients(page = 1, search = '') {
+      clientsPage = page;
+      try {
+        const params = new URLSearchParams({ page, limit: 15 });
+        if (search) params.set('search', search);
+        const data = await api(`/clients?${params}`);
+
+        if (data.clients.length === 0) {
+          document.getElementById('clientsTable').innerHTML = '<div class="empty-state"><i class="fas fa-users"></i><p>Aucun client trouvé</p></div>';
+          return;
+        }
+
+        document.getElementById('clientsTable').innerHTML = `
+          <table>
+            <thead><tr><th>Nom</th><th>Email</th><th>Téléphone</th><th>Ville</th><th>Commandes</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${data.clients.map(c => `
+                <tr>
+                  <td><strong>${c.nom} ${c.prenom || ''}</strong></td>
+                  <td>${c.email || '-'}</td>
+                  <td>${c.telephone}</td>
+                  <td>${c.ville || '-'}</td>
+                  <td>${c.commandes?.length || 0}</td>
+                  <td>${c.actif ? '<span class="badge badge-success">Actif</span>' : '<span class="badge badge-danger">Inactif</span>'}</td>
+                  <td class="actions">
+                    <button class="action-btn view" title="Détails" onclick="viewClient(${c.id})"><i class="fas fa-eye"></i></button>
+                    <button class="action-btn toggle" title="${c.actif ? 'Désactiver' : 'Activer'}" onclick="toggleClient(${c.id})"><i class="fas fa-${c.actif ? 'ban' : 'check'}"></i></button>
+                    <button class="action-btn delete" title="Supprimer" onclick="deleteClient(${c.id}, '${c.nom}')"><i class="fas fa-trash"></i></button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          ${renderPagination(data.pagination, 'loadClients')}
+        `;
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function viewClient(id) {
+      try {
+        const data = await api(`/clients/${id}`);
+        const c = data.client;
+        document.getElementById('detailTitle').textContent = `${c.nom} ${c.prenom || ''}`;
+        document.getElementById('detailContent').innerHTML = `
+          <div class="detail-grid">
+            <div class="detail-item"><label>Email</label><p>${c.email || '-'}</p></div>
+            <div class="detail-item"><label>Téléphone</label><p>${c.telephone}</p></div>
+            <div class="detail-item"><label>Ville</label><p>${c.ville || '-'}</p></div>
+            <div class="detail-item"><label>Adresse</label><p>${c.adresse || '-'}</p></div>
+            <div class="detail-item"><label>Commandes</label><p>${c.commandes?.length || 0}</p></div>
+            <div class="detail-item"><label>Total dépensé</label><p>${formatMoney(data.stats.total_depenses)}</p></div>
+            <div class="detail-item"><label>Statut</label><p>${c.actif ? '✅ Actif' : '❌ Inactif'}</p></div>
+            <div class="detail-item"><label>Inscrit le</label><p>${formatDate(c.createdAt)}</p></div>
+          </div>
+        `;
+        openModal('detailModal');
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function toggleClient(id) {
+      try {
+        const data = await api(`/clients/${id}/toggle`, { method: 'PATCH' });
+        showToast(data.message);
+        loadClients(clientsPage);
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function deleteClient(id, nom) {
+      if (!confirm(`Supprimer le client "${nom}" ? Cette action est irréversible.`)) return;
+      try {
+        const data = await api(`/clients/${id}`, { method: 'DELETE' });
+        showToast(data.message);
+        loadClients(clientsPage);
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    let searchClientTimeout;
+    document.getElementById('searchClient').addEventListener('input', (e) => {
+      clearTimeout(searchClientTimeout);
+      searchClientTimeout = setTimeout(() => loadClients(1, e.target.value), 500);
+    });
+
+    // =============================================
+    // PRODUITS
+    // =============================================
+    let produitsPage = 1;
+
+    async function loadProduits(page = 1, search = '') {
+      produitsPage = page;
+      try {
+        const params = new URLSearchParams({ page, limit: 15 });
+        if (search) params.set('search', search);
+        const data = await api(`/produits?${params}`);
+
+        if (data.produits.length === 0) {
+          document.getElementById('produitsTable').innerHTML = '<div class="empty-state"><i class="fas fa-box"></i><p>Aucun produit trouvé</p></div>';
+          return;
+        }
+
+        document.getElementById('produitsTable').innerHTML = `
+          <table>
+            <thead><tr><th>Produit</th><th>Vendeur</th><th>Prix (CDF)</th><th>Stock</th><th>Catégorie</th><th>Statut</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${data.produits.map(p => `
+                <tr>
+                  <td><strong>${p.nom}</strong></td>
+                  <td>${p.vendeur?.nom_boutique || '-'}</td>
+                  <td>${formatMoney(p.prix_cdf)}</td>
+                  <td>${p.stock || 0}</td>
+                  <td><span class="badge badge-neutral">${p.categorie || '-'}</span></td>
+                  <td>${p.disponible ? '<span class="badge badge-success">Visible</span>' : '<span class="badge badge-danger">Masqué</span>'}</td>
+                  <td class="actions">
+                    <button class="action-btn toggle" title="${p.disponible ? 'Masquer' : 'Rendre visible'}" onclick="toggleProduit(${p.id})"><i class="fas fa-${p.disponible ? 'eye-slash' : 'eye'}"></i></button>
+                    <button class="action-btn delete" title="Supprimer" onclick="deleteProduit(${p.id}, '${p.nom.replace(/'/g, "\\'")}')"><i class="fas fa-trash"></i></button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          ${renderPagination(data.pagination, 'loadProduits')}
+        `;
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function toggleProduit(id) {
+      try {
+        const data = await api(`/produits/${id}/toggle`, { method: 'PATCH' });
+        showToast(data.message);
+        loadProduits(produitsPage);
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function deleteProduit(id, nom) {
+      if (!confirm(`Supprimer le produit "${nom}" ?`)) return;
+      try {
+        const data = await api(`/produits/${id}`, { method: 'DELETE' });
+        showToast(data.message);
+        loadProduits(produitsPage);
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    let searchProduitTimeout;
+    document.getElementById('searchProduit').addEventListener('input', (e) => {
+      clearTimeout(searchProduitTimeout);
+      searchProduitTimeout = setTimeout(() => loadProduits(1, e.target.value), 500);
+    });
+
+    // =============================================
+    // COMMANDES
+    // =============================================
+    let commandesPage = 1;
+
+    async function loadCommandes(page = 1) {
+      commandesPage = page;
+      try {
+        const statut = document.getElementById('filterStatut').value;
+        const params = new URLSearchParams({ page, limit: 15 });
+        if (statut) params.set('statut', statut);
+        const data = await api(`/commandes?${params}`);
+
+        if (data.commandes.length === 0) {
+          document.getElementById('commandesTable').innerHTML = '<div class="empty-state"><i class="fas fa-shopping-cart"></i><p>Aucune commande trouvée</p></div>';
+          return;
+        }
+
+        document.getElementById('commandesTable').innerHTML = `
+          <table>
+            <thead><tr><th>ID</th><th>Client</th><th>Vendeur</th><th>Montant</th><th>Paiement</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${data.commandes.map(o => `
+                <tr>
+                  <td>#${o.id}</td>
+                  <td>${o.client?.nom || ''} ${o.client?.prenom || ''}</td>
+                  <td>${o.vendeur?.nom_boutique || ''}</td>
+                  <td>${formatMoney(o.montant_total)}</td>
+                  <td>${o.paiement ? statutBadge(o.paiement.statut) : '<span class="badge badge-neutral">-</span>'}</td>
+                  <td>${statutBadge(o.statut)}</td>
+                  <td>${formatDate(o.createdAt)}</td>
+                  <td class="actions">
+                    <button class="action-btn view" title="Détails" onclick="viewCommande(${o.id})"><i class="fas fa-eye"></i></button>
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          ${renderPagination(data.pagination, 'loadCommandes')}
+        `;
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function viewCommande(id) {
+      try {
+        // Fetch all commandes and find this one (or we could add a specific endpoint)
+        const data = await api(`/commandes?page=1&limit=1000`);
+        const o = data.commandes.find(c => c.id === id);
+        if (!o) throw new Error('Commande non trouvée');
+
+        document.getElementById('detailTitle').textContent = `Commande #${o.id}`;
+        document.getElementById('detailContent').innerHTML = `
+          <div class="detail-grid">
+            <div class="detail-item"><label>Client</label><p>${o.client?.nom || ''} ${o.client?.prenom || ''}</p></div>
+            <div class="detail-item"><label>Tél. Client</label><p>${o.client?.telephone || ''}</p></div>
+            <div class="detail-item"><label>Vendeur</label><p>${o.vendeur?.nom_boutique || ''}</p></div>
+            <div class="detail-item"><label>Montant</label><p>${formatMoney(o.montant_total)}</p></div>
+            <div class="detail-item"><label>Statut</label><p>${statutBadge(o.statut)}</p></div>
+            <div class="detail-item"><label>Date</label><p>${formatDate(o.createdAt)}</p></div>
+          </div>
+          ${o.lignes?.length ? `
+            <h4 style="margin-top:20px;margin-bottom:10px;">Articles (${o.lignes.length})</h4>
+            <table>
+              <thead><tr><th>Produit</th><th>Qté</th><th>Prix unit.</th><th>Sous-total</th></tr></thead>
+              <tbody>
+                ${o.lignes.map(l => `
+                  <tr>
+                    <td>${l.produit?.nom || 'Produit #' + l.produit_id}</td>
+                    <td>${l.quantite}</td>
+                    <td>${formatMoney(l.prix_unitaire)}</td>
+                    <td>${formatMoney(l.sous_total)}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          ` : ''}
+          <div style="margin-top:20px;">
+            <label style="font-size:12px;color:var(--text-light);font-weight:600;text-transform:uppercase;">Changer le statut</label>
+            <div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap;">
+              ${['en_attente', 'confirmée', 'en_preparation', 'en_livraison', 'livrée', 'annulée'].map(s =>
+                `<button class="btn btn-sm ${o.statut === s ? 'btn-primary' : 'btn-outline'}" onclick="updateCommandeStatut(${o.id}, '${s}')">${s}</button>`
+              ).join('')}
+            </div>
+          </div>
+        `;
+        openModal('detailModal');
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function updateCommandeStatut(id, statut) {
+      try {
+        const data = await api(`/commandes/${id}/statut`, {
+          method: 'PATCH',
+          body: JSON.stringify({ statut })
+        });
+        showToast(data.message);
+        closeModal('detailModal');
+        loadCommandes(commandesPage);
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    document.getElementById('filterStatut').addEventListener('change', () => loadCommandes(1));
+
+    // =============================================
+    // PAIEMENTS
+    // =============================================
+    async function loadPaiements(page = 1) {
+      try {
+        const data = await api(`/paiements?page=${page}&limit=15`);
+
+        if (data.paiements.length === 0) {
+          document.getElementById('paiementsTable').innerHTML = '<div class="empty-state"><i class="fas fa-money-bill-wave"></i><p>Aucun paiement</p></div>';
+          return;
+        }
+
+        document.getElementById('paiementsTable').innerHTML = `
+          <table>
+            <thead><tr><th>ID</th><th>Commande</th><th>Client</th><th>Vendeur</th><th>Montant</th><th>Méthode</th><th>Statut</th><th>Date</th></tr></thead>
+            <tbody>
+              ${data.paiements.map(p => `
+                <tr>
+                  <td>#${p.id}</td>
+                  <td>#${p.commande_id}</td>
+                  <td>${p.commande?.client?.nom || ''} ${p.commande?.client?.prenom || ''}</td>
+                  <td>${p.commande?.vendeur?.nom_boutique || ''}</td>
+                  <td>${formatMoney(p.montant)}</td>
+                  <td><span class="badge badge-info">${p.methode_paiement || '-'}</span></td>
+                  <td>${statutBadge(p.statut)}</td>
+                  <td>${formatDate(p.createdAt)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          ${renderPagination(data.pagination, 'loadPaiements')}
+        `;
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // =============================================
+    // ADMINS
+    // =============================================
+    async function loadAdmins() {
+      try {
+        const admins = await api('/admins');
+        if (admins.length === 0) {
+          document.getElementById('adminsTable').innerHTML = '<div class="empty-state"><i class="fas fa-user-shield"></i><p>Aucun admin</p></div>';
+          return;
+        }
+
+        document.getElementById('adminsTable').innerHTML = `
+          <table>
+            <thead><tr><th>Nom</th><th>Email</th><th>Rôle</th><th>Dernière connexion</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${admins.map(a => `
+                <tr>
+                  <td><strong>${a.nom}</strong></td>
+                  <td>${a.email}</td>
+                  <td><span class="badge ${a.role === 'super_admin' ? 'badge-danger' : a.role === 'admin' ? 'badge-info' : 'badge-neutral'}">${a.role}</span></td>
+                  <td>${a.derniere_connexion ? formatDate(a.derniere_connexion) : 'Jamais'}</td>
+                  <td class="actions">
+                    ${a.id !== currentAdmin?.id ? `<button class="action-btn delete" title="Supprimer" onclick="deleteAdmin(${a.id}, '${a.nom}')"><i class="fas fa-trash"></i></button>` : '<span class="badge badge-success">Vous</span>'}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (err) {
+        document.getElementById('adminsTable').innerHTML = '<div class="empty-state"><i class="fas fa-lock"></i><p>Accès réservé au Super Admin</p></div>';
+      }
+    }
+
+    function showAddAdminModal() {
+      document.getElementById('addAdminForm').reset();
+      openModal('addAdminModal');
+    }
+
+    document.getElementById('addAdminForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      try {
+        await api('/admins', {
+          method: 'POST',
+          body: JSON.stringify({
+            nom: document.getElementById('newAdminNom').value,
+            email: document.getElementById('newAdminEmail').value,
+            mot_de_passe: document.getElementById('newAdminPassword').value,
+            role: document.getElementById('newAdminRole').value
+          })
+        });
+        showToast('Admin créé avec succès');
+        closeModal('addAdminModal');
+        loadAdmins();
+      } catch (err) { showToast(err.message, 'error'); }
+    });
+
+    async function deleteAdmin(id, nom) {
+      if (!confirm(`Supprimer l'admin "${nom}" ?`)) return;
+      try {
+        await api(`/admins/${id}`, { method: 'DELETE' });
+        showToast('Admin supprimé');
+        loadAdmins();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // =============================================
+    // HELPERS
+    // =============================================
+
+    function formatMoney(amount) {
+      if (!amount) return '0 CDF';
+      return new Intl.NumberFormat('fr-CD').format(amount) + ' CDF';
+    }
+
+    function formatDate(dateStr) {
+      if (!dateStr) return '-';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function statutBadge(statut) {
+      const map = {
+        'en_attente': 'badge-warning',
+        'confirmée': 'badge-info',
+        'en_preparation': 'badge-info',
+        'en_livraison': 'badge-info',
+        'livrée': 'badge-success',
+        'annulée': 'badge-danger',
+        'payé': 'badge-success',
+        'en_cours': 'badge-warning',
+        'échoué': 'badge-danger',
+        'remboursé': 'badge-neutral'
+      };
+      return `<span class="badge ${map[statut] || 'badge-neutral'}">${statut || '-'}</span>`;
+    }
+
+    function renderPagination(pg, fnName) {
+      if (pg.pages <= 1) return '';
+      let html = '<div class="pagination"><div class="pagination-info">';
+      html += `Page ${pg.page} sur ${pg.pages} (${pg.total} résultats)</div><div class="pagination-btns">`;
+      html += `<button class="page-btn" ${pg.page <= 1 ? 'disabled' : ''} onclick="${fnName}(${pg.page - 1})"><i class="fas fa-chevron-left"></i></button>`;
+      for (let i = Math.max(1, pg.page - 2); i <= Math.min(pg.pages, pg.page + 2); i++) {
+        html += `<button class="page-btn ${i === pg.page ? 'active' : ''}" onclick="${fnName}(${i})">${i}</button>`;
+      }
+      html += `<button class="page-btn" ${pg.page >= pg.pages ? 'disabled' : ''} onclick="${fnName}(${pg.page + 1})"><i class="fas fa-chevron-right"></i></button>`;
+      html += '</div></div>';
+      return html;
+    }
+
+    function openModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    // Close modals on click outside
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) overlay.classList.remove('active');
+      });
+    });
+
+    // Mobile menu toggle
+    if (window.innerWidth <= 768) {
+      document.getElementById('menuToggle').style.display = 'flex';
+    }
+    document.getElementById('menuToggle')?.addEventListener('click', () => {
+      document.getElementById('sidebar').classList.toggle('open');
+    });
+  </script>
+</body>
+</html>

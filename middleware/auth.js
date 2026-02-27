@@ -39,9 +39,34 @@ const authClient = (req, res, next) => {
   });
 };
 
+// Middleware pour admin uniquement
+const authAdmin = (req, res, next) => {
+  auth(req, res, () => {
+    if (!['super_admin', 'admin', 'moderateur'].includes(req.user.role)) {
+      return res.status(403).json({ error: 'Accès réservé aux administrateurs' });
+    }
+    next();
+  });
+};
+
+// Middleware pour super admin uniquement
+const authSuperAdmin = (req, res, next) => {
+  auth(req, res, () => {
+    if (req.user.role !== 'super_admin') {
+      return res.status(403).json({ error: 'Accès réservé au super administrateur' });
+    }
+    next();
+  });
+};
+
 // Générer un token JWT
 const generateToken = (payload) => {
   return jwt.sign(payload, JWT_SECRET, { expiresIn: '7d' });
 };
 
-module.exports = { auth, authVendeur, authClient, generateToken, JWT_SECRET };
+// Générer un token JWT admin (durée 12h)
+const generateAdminToken = (payload) => {
+  return jwt.sign(payload, JWT_SECRET, { expiresIn: '12h' });
+};
+
+module.exports = { auth, authVendeur, authClient, authAdmin, authSuperAdmin, generateToken, generateAdminToken, JWT_SECRET };

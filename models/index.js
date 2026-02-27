@@ -8,6 +8,7 @@ const Paiement = require('./Transaction'); // Fichier renommé logiquement
 const Livraison = require('./Livraison');
 const ZoneLivraison = require('./ZoneLivraison');
 const Notification = require('./Notification');
+const Admin = require('./Admin');
 
 // =============================================
 // ASSOCIATIONS
@@ -55,5 +56,6 @@ module.exports = {
   Paiement,
   Livraison,
   ZoneLivraison,
-  Notification
+  Notification,
+  Admin
 };

@@ -68,12 +68,13 @@ exports.inscriptionVendeur = async (req, res) => {
 // =============================================
 exports.connexionVendeur = async (req, res) => {
   try {
-    const { email, mot_de_passe } = req.body;
+    const { email, telephone, mot_de_passe } = req.body;
 
-    // Trouver le vendeur
-    const vendeur = await Vendeur.findOne({ where: { email } });
+    // Trouver le vendeur par email OU téléphone
+    const whereClause = email ? { email } : { telephone };
+    const vendeur = await Vendeur.findOne({ where: whereClause });
     if (!vendeur) {
-      return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
+      return res.status(401).json({ error: 'Identifiants incorrects' });
     }
 
     if (!vendeur.actif) {
