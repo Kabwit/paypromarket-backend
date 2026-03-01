@@ -476,12 +476,11 @@
       font-size: 11px; font-weight: 600; color: white;
     }
     .status-en_attente { background: var(--accent); }
-    .status-confirmee { background: #1976D2; }
-    .status-en_preparation { background: #7B1FA2; }
-    .status-prete { background: #00796B; }
-    .status-en_livraison { background: #5D4037; }
-    .status-livree { background: var(--success); }
-    .status-annulee { background: var(--error); }
+    .status-confirmée { background: #1976D2; }
+    .status-préparation { background: #7B1FA2; }
+    .status-en_cours { background: #00796B; }
+    .status-livrée { background: var(--success); }
+    .status-annulée { background: var(--error); }
     .order-amount { font-size: 16px; font-weight: 700; color: var(--primary); }
     .order-date { font-size: 12px; color: var(--text-secondary); }
     .order-actions { margin-top: 8px; display: flex; gap: 8px; }
@@ -735,18 +734,29 @@
         </div>
         <div class="form-group">
           <label>Catégorie</label>
-          <select id="regCategorie">
-            <option value="">Choisir une catégorie</option>
-            <option>Électronique</option>
-            <option>Mode & Vêtements</option>
-            <option>Alimentation</option>
-            <option>Maison & Déco</option>
-            <option>Beauté & Santé</option>
-            <option>Sport & Loisirs</option>
-            <option>Auto & Moto</option>
-            <option>Services</option>
-            <option>Autre</option>
-          </select>
+          <input type="text" id="regCategorie" list="categorieList" placeholder="Ex: Électronique, Mode, Alimentation...">
+          <datalist id="categorieList">
+            <option value="Électronique">
+            <option value="Mode & Vêtements">
+            <option value="Alimentation">
+            <option value="Maison & Déco">
+            <option value="Beauté & Santé">
+            <option value="Sport & Loisirs">
+            <option value="Auto & Moto">
+            <option value="Services">
+            <option value="Cosmétique">
+            <option value="Artisanat">
+          </datalist>
+        </div>
+        <div class="form-group">
+          <label>Type de boutique</label>
+          <input type="text" id="regTypeBoutique" list="typeList" placeholder="Ex: Détaillant, Grossiste...">
+          <datalist id="typeList">
+            <option value="Détaillant">
+            <option value="Grossiste">
+            <option value="En ligne">
+            <option value="Mixte">
+          </datalist>
         </div>
       </div>
 
@@ -981,18 +991,19 @@ function toast(msg, type = 'info') {
 function formatFC(n) {
   return new Intl.NumberFormat('fr-CD').format(n) + ' FC';
 }
-function imgUrl(path) {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-  return window.location.origin + '/' + path;
+function imgUrl(p) {
+  if (!p) return '';
+  if (p.startsWith('http')) return p;
+  if (p.startsWith('/')) return window.location.origin + p;
+  return window.location.origin + '/' + p;
 }
 function formatDate(d) {
   if (!d) return '';
   return new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 }
 function statusLabel(s) {
-  const m = { en_attente:'En attente', confirmee:'Confirmée', en_preparation:'En préparation',
-    prete:'Prête', en_livraison:'En livraison', livree:'Livrée', annulee:'Annulée' };
+  const m = { en_attente:'En attente', 'confirmée':'Confirmée', 'préparation':'En préparation',
+    en_cours:'En cours', 'livrée':'Livrée', 'annulée':'Annulée' };
   return m[s] || s;
 }
 
@@ -1084,13 +1095,13 @@ async function handleRegister(e) {
       email: document.getElementById('regEmail').value || undefined,
       mot_de_passe: document.getElementById('regPassword').value,
       ville: document.getElementById('regVille').value || undefined,
-      categorie_principale: document.getElementById('regCategorie').value || undefined,
-      type_boutique: document.getElementById('regCategorie').value || 'Autre'
+      categorie_boutique: document.getElementById('regCategorie').value || 'autre',
+      type_boutique: document.getElementById('regTypeBoutique').value || 'détaillant'
     };
   } else {
     path = '/auth/client/inscription';
     body = {
-      nom_complet: document.getElementById('regName').value,
+      nom: document.getElementById('regName').value,
       telephone: document.getElementById('regPhone').value,
       email: document.getElementById('regEmail').value || undefined,
       mot_de_passe: document.getElementById('regPassword').value,
@@ -1192,8 +1203,9 @@ async function loadHomeProducts() {
 
 function productCardHTML(p) {
   const photo = p.photos && p.photos.length > 0 ? imgUrl(p.photos[0]) : '';
-  const hasPromo = p.prix_promo && p.prix_promo < p.prix;
-  const price = hasPromo ? p.prix_promo : p.prix;
+  const hasPromo = p.promotion && p.pourcentage_promotion > 0;
+  const promoPrice = hasPromo ? Math.round(p.prix_cdf * (1 - p.pourcentage_promotion / 100)) : p.prix_cdf;
+  const price = hasPromo ? promoPrice : p.prix_cdf;
   const shopName = p.Vendeur?.nom_boutique || p.vendeur?.nom_boutique || '';
   return `
     <div class="product-card" onclick="showProductDetail(${p.id})">
@@ -1202,7 +1214,7 @@ function productCardHTML(p) {
         <div class="product-card-name">${p.nom}</div>
         <div class="product-card-price">
           ${formatFC(price)}
-          ${hasPromo ? `<span class="old-price">${formatFC(p.prix)}</span><span class="promo-badge">-${Math.round((1 - p.prix_promo/p.prix)*100)}%</span>` : ''}
+          ${hasPromo ? `<span class="old-price">${formatFC(p.prix_cdf)}</span><span class="promo-badge">-${p.pourcentage_promotion}%</span>` : ''}
         </div>
         ${shopName ? `<div class="product-card-shop"><i class="fas fa-store"></i> ${shopName}</div>` : ''}
       </div>
@@ -1249,8 +1261,9 @@ async function showProductDetail(id) {
 
   currentDetailQty = 1;
   const photos = p.photos || [];
-  const hasPromo = p.prix_promo && p.prix_promo < p.prix;
-  const price = hasPromo ? p.prix_promo : p.prix;
+  const hasPromo = p.promotion && p.pourcentage_promotion > 0;
+  const promoPrice = hasPromo ? Math.round(p.prix_cdf * (1 - p.pourcentage_promotion / 100)) : p.prix_cdf;
+  const price = hasPromo ? promoPrice : p.prix_cdf;
   const shopName = p.Vendeur?.nom_boutique || p.vendeur?.nom_boutique || '';
   const shopCity = p.Vendeur?.ville || p.vendeur?.ville || '';
 
@@ -1267,7 +1280,7 @@ async function showProductDetail(id) {
       ${p.categorie ? `<span class="detail-category">${p.categorie}</span>` : ''}
       <h2 class="detail-name">${p.nom}</h2>
       <div class="detail-price">${formatFC(price)}</div>
-      ${hasPromo ? `<div class="detail-old-price">${formatFC(p.prix)} <span class="promo-badge" style="text-decoration:none;">-${Math.round((1-p.prix_promo/p.prix)*100)}%</span></div>` : ''}
+      ${hasPromo ? `<div class="detail-old-price">${formatFC(p.prix_cdf)} <span class="promo-badge" style="text-decoration:none;">-${p.pourcentage_promotion}%</span></div>` : ''}
       <div class="detail-stock ${p.stock > 0 ? 'in-stock' : 'out-stock'}">
         <i class="fas fa-${p.stock > 0 ? 'check-circle' : 'times-circle'}"></i>
         ${p.stock > 0 ? `En stock (${p.stock} ${p.unite||'pièces'})` : 'Rupture de stock'}
@@ -1312,7 +1325,8 @@ function changeDetailQty(d) {
   const p = document.getElementById('clientDetail')._product;
   currentDetailQty = Math.max(1, Math.min(currentDetailQty + d, p.stock || 99));
   document.getElementById('detailQty').textContent = currentDetailQty;
-  const price = (p.prix_promo && p.prix_promo < p.prix) ? p.prix_promo : p.prix;
+  const hasP = p.promotion && p.pourcentage_promotion > 0;
+  const price = hasP ? Math.round(p.prix_cdf * (1 - p.pourcentage_promotion / 100)) : p.prix_cdf;
   document.getElementById('detailTotal').textContent = formatFC(price * currentDetailQty);
 }
 
@@ -1332,7 +1346,7 @@ function addToCart(product, qty = 1) {
     cart.push({
       id: product.id,
       nom: product.nom,
-      prix: (product.prix_promo && product.prix_promo < product.prix) ? product.prix_promo : product.prix,
+      prix: (product.promotion && product.pourcentage_promotion > 0) ? Math.round(product.prix_cdf * (1 - product.pourcentage_promotion / 100)) : product.prix_cdf,
       photo: product.photos?.[0] || '',
       quantite: qty,
       vendeurId: product.vendeur_id || product.Vendeur?.id || product.vendeur?.id,
@@ -1475,13 +1489,13 @@ async function submitOrder(e) {
 
   let success = true;
   for (const vendeurId of Object.keys(groups)) {
-    const items = groups[vendeurId];
+    const groupItems = groups[vendeurId];
     const body = {
+      vendeur_id: parseInt(vendeurId),
       adresse_livraison: document.getElementById('orderAddress').value,
-      ville_livraison: document.getElementById('orderCity').value,
-      telephone_contact: document.getElementById('orderPhone').value,
+      telephone_livraison: document.getElementById('orderPhone').value,
       notes: document.getElementById('orderNotes').value,
-      lignes: items.map(i => ({ produit_id: i.id, quantite: i.quantite }))
+      items: groupItems.map(i => ({ produit_id: i.id, quantite: i.quantite }))
     };
     const res = await api('POST', '/commandes', body);
     if (!res || res.error) { success = false; toast(res?.error || 'Erreur commande', 'error'); }
@@ -1640,6 +1654,12 @@ function showVendeurPage(page) {
 // VENDEUR DASHBOARD
 // =============================================
 async function loadDashboard() {
+  // Refresh vendeur profile data from API to get slug etc.
+  const profil = await api('GET', '/vendeurs/profil');
+  if (profil && profil.id) {
+    userData = profil;
+    localStorage.setItem('pp_user', JSON.stringify(userData));
+  }
   const u = userData || {};
   document.getElementById('dashWelcome').textContent = `Bienvenue, ${u.nom_boutique || 'Vendeur'} 👋`;
   const stats = document.getElementById('dashStats');
@@ -1647,13 +1667,13 @@ async function loadDashboard() {
 
   const data = await api('GET', '/dashboard');
   if (data) {
-    const boutiqueUrl = u.slug_boutique ? (window.location.origin + '/boutique/' + u.slug_boutique) : '';
+    const boutiqueUrl = u.slug ? (window.location.origin + '/boutique/' + u.slug) : '';
     const shareMsg = encodeURIComponent(`🛍️ Découvrez ma boutique *${u.nom_boutique}* sur PayPro Market RDC !\n\n👉 ${boutiqueUrl}`);
     stats.innerHTML = `
-      <div class="stat-card"><i class="fas fa-box"></i><div class="stat-value">${data.produits ?? data.totalProduits ?? 0}</div><div class="stat-label">Produits</div></div>
-      <div class="stat-card"><i class="fas fa-receipt"></i><div class="stat-value">${data.commandes ?? data.totalCommandes ?? 0}</div><div class="stat-label">Commandes</div></div>
-      <div class="stat-card"><i class="fas fa-money-bill-wave"></i><div class="stat-value">${formatFC(data.revenus ?? data.chiffreAffaires ?? 0)}</div><div class="stat-label">Revenus</div></div>
-      <div class="stat-card"><i class="fas fa-clock"></i><div class="stat-value">${data.en_attente ?? data.commandesEnAttente ?? 0}</div><div class="stat-label">En attente</div></div>
+      <div class="stat-card"><i class="fas fa-box"></i><div class="stat-value">${data.produits?.total ?? 0}</div><div class="stat-label">Produits</div></div>
+      <div class="stat-card"><i class="fas fa-receipt"></i><div class="stat-value">${data.commandes?.total ?? 0}</div><div class="stat-label">Commandes</div></div>
+      <div class="stat-card"><i class="fas fa-money-bill-wave"></i><div class="stat-value">${formatFC(data.chiffre_affaires?.mensuel ?? 0)}</div><div class="stat-label">Revenus</div></div>
+      <div class="stat-card"><i class="fas fa-clock"></i><div class="stat-value">${data.commandes?.par_statut?.en_attente ?? 0}</div><div class="stat-label">En attente</div></div>
       ${boutiqueUrl ? `
       <div style="grid-column:1/-1;background:linear-gradient(135deg,#1B5E20,#4CAF50);border-radius:14px;padding:20px;color:white;margin-top:4px;">
         <div style="font-size:15px;font-weight:700;margin-bottom:6px;"><i class="fas fa-share-alt"></i> Partager ma boutique</div>
@@ -1665,7 +1685,7 @@ async function loadDashboard() {
           <button onclick="navigator.clipboard.writeText('${boutiqueUrl}').then(()=>toast('Lien copié ! 📋','success'))" style="display:inline-flex;align-items:center;gap:6px;padding:10px 16px;background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.3);border-radius:20px;font-size:13px;font-weight:600;cursor:pointer;">
             <i class="fas fa-link"></i> Copier le lien
           </button>
-          <a href="/boutique/${u.slug_boutique}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:10px 16px;background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.3);border-radius:20px;text-decoration:none;font-size:13px;font-weight:600;">
+          <a href="/boutique/${u.slug}" target="_blank" style="display:inline-flex;align-items:center;gap:6px;padding:10px 16px;background:rgba(255,255,255,0.2);color:white;border:1px solid rgba(255,255,255,0.3);border-radius:20px;text-decoration:none;font-size:13px;font-weight:600;">
             <i class="fas fa-external-link-alt"></i> Voir ma boutique
           </a>
         </div>
@@ -1695,7 +1715,7 @@ async function loadVendeurProducts() {
       <div class="v-product-info">
         <div class="v-product-name">${p.nom}</div>
         <div class="v-product-meta">Stock: ${p.stock} ${p.unite||''} | ${p.categorie||''}</div>
-        <div class="v-product-price">${formatFC(p.prix)}</div>
+        <div class="v-product-price">${formatFC(p.prix_cdf)}${p.promotion && p.pourcentage_promotion > 0 ? ` <span class="promo-badge">-${p.pourcentage_promotion}%</span>` : ''}</div>
       </div>
       <div class="v-product-actions">
         <button style="background:rgba(25,118,210,0.1);color:#1976D2;" onclick="showEditProduct(${p.id})"><i class="fas fa-edit"></i></button>
@@ -1730,21 +1750,37 @@ function showAddProduct(product = null) {
         </div>
         <div class="form-group">
           <label>Catégorie</label>
-          <select id="prodCategorie">
-            <option value="">Choisir</option>
-            ${['Électronique','Mode & Vêtements','Alimentation','Maison & Déco','Beauté & Santé','Sport & Loisirs','Auto & Moto','Services','Autre'].map(c =>
-              `<option ${isEdit && product.categorie === c ? 'selected' : ''}>${c}</option>`
-            ).join('')}
-          </select>
+          <input type="text" id="prodCategorie" list="prodCatList" value="${isEdit?product.categorie||'':''}" placeholder="Ex: Électronique, Mode...">
+          <datalist id="prodCatList">
+            <option value="Électronique">
+            <option value="Mode & Vêtements">
+            <option value="Alimentation">
+            <option value="Maison & Déco">
+            <option value="Beauté & Santé">
+            <option value="Sport & Loisirs">
+            <option value="Auto & Moto">
+            <option value="Cosmétique">
+            <option value="Artisanat">
+            <option value="Services">
+          </datalist>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label>Prix (FC) *</label>
-            <input type="number" id="prodPrix" value="${isEdit?product.prix:''}" required>
+            <input type="number" id="prodPrix" value="${isEdit?product.prix_cdf:''}" required>
           </div>
           <div class="form-group">
-            <label>Prix promo (FC)</label>
-            <input type="number" id="prodPrixPromo" value="${isEdit?product.prix_promo||'':''}">
+            <label>Prix USD</label>
+            <input type="number" id="prodPrixUsd" value="${isEdit?product.prix_usd||'':''}" step="0.01">
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label><input type="checkbox" id="prodPromo" ${isEdit&&product.promotion?'checked':''}> En promotion</label>
+          </div>
+          <div class="form-group">
+            <label>% Réduction</label>
+            <input type="number" id="prodPourcentPromo" value="${isEdit?product.pourcentage_promotion||'':''}" min="0" max="100" placeholder="Ex: 10">
           </div>
         </div>
         <div class="form-row">
@@ -1783,11 +1819,14 @@ async function saveProduct(e, editId) {
   fd.append('nom', document.getElementById('prodNom').value);
   fd.append('description', document.getElementById('prodDesc').value);
   fd.append('categorie', document.getElementById('prodCategorie').value);
-  fd.append('prix', document.getElementById('prodPrix').value);
-  const promo = document.getElementById('prodPrixPromo').value;
-  if (promo) fd.append('prix_promo', promo);
+  fd.append('prix_cdf', document.getElementById('prodPrix').value);
+  const prixUsd = document.getElementById('prodPrixUsd').value;
+  if (prixUsd) fd.append('prix_usd', prixUsd);
+  fd.append('promotion', document.getElementById('prodPromo').checked);
+  const pourcentPromo = document.getElementById('prodPourcentPromo').value;
+  if (pourcentPromo) fd.append('pourcentage_promotion', pourcentPromo);
   fd.append('stock', document.getElementById('prodStock').value);
-  fd.append('unite', document.getElementById('prodUnite').value);
+  fd.append('unite', document.getElementById('prodUnite').value || 'pièce');
   fd.append('delai_preparation', document.getElementById('prodDelai').value);
 
   const files = document.getElementById('prodPhotos').files;
@@ -1830,7 +1869,7 @@ async function loadVendeurOrders() {
   }
 
   container.innerHTML = orders.map(o => {
-    const clientName = o.Client?.nom_complet || o.client?.nom_complet || '';
+    const clientName = o.Client?.nom || o.client?.nom || '';
     return `
     <div class="order-card">
       <div class="order-header">
@@ -1854,11 +1893,10 @@ async function loadVendeurOrders() {
 
 function showUpdateStatus(orderId, currentStatus) {
   const statuses = [
-    { val: 'confirmee', label: 'Confirmer', icon: 'check' },
-    { val: 'en_preparation', label: 'En préparation', icon: 'utensils' },
-    { val: 'prete', label: 'Prête', icon: 'box' },
-    { val: 'en_livraison', label: 'En livraison', icon: 'truck' },
-    { val: 'livree', label: 'Livrée', icon: 'check-double' },
+    { val: 'confirmée', label: 'Confirmer', icon: 'check' },
+    { val: 'préparation', label: 'En préparation', icon: 'utensils' },
+    { val: 'en_cours', label: 'En cours', icon: 'truck' },
+    { val: 'livrée', label: 'Livrée', icon: 'check-double' },
   ];
 
   document.getElementById('modalBody').innerHTML = `
@@ -1891,7 +1929,7 @@ function renderVendeurProfile() {
     <div class="profile-header">
       <div class="profile-avatar"><i class="fas fa-store"></i></div>
       <div class="profile-name">${u.nom_boutique || 'Ma Boutique'}</div>
-      <div class="profile-phone">${u.slug_boutique ? '@' + u.slug_boutique : ''}</div>
+      <div class="profile-phone">${u.slug ? '@' + u.slug : ''}</div>
     </div>
     <div class="profile-cards">
       <div class="profile-card">
@@ -1899,7 +1937,7 @@ function renderVendeurProfile() {
         <div class="profile-row"><span class="profile-row-label"><i class="fas fa-phone"></i> Téléphone</span><span class="profile-row-value">${u.telephone||'-'}</span></div>
         <div class="profile-row"><span class="profile-row-label"><i class="fas fa-envelope"></i> Email</span><span class="profile-row-value">${u.email||'-'}</span></div>
         <div class="profile-row"><span class="profile-row-label"><i class="fas fa-map-marker-alt"></i> Ville</span><span class="profile-row-value">${u.ville||'-'}</span></div>
-        <div class="profile-row"><span class="profile-row-label"><i class="fas fa-tag"></i> Catégorie</span><span class="profile-row-value">${u.categorie_principale||'-'}</span></div>
+        <div class="profile-row"><span class="profile-row-label"><i class="fas fa-tag"></i> Catégorie</span><span class="profile-row-value">${u.categorie_boutique||'-'}</span></div>
       </div>
       ${u.description ? `<div class="profile-card"><div class="profile-card-title">Description</div><p style="font-size:13px;color:var(--text-secondary);">${u.description}</p></div>` : ''}
       <button class="btn btn-outline mb-12" onclick="showEditProfile()">
@@ -1959,8 +1997,8 @@ window.addEventListener('DOMContentLoaded', () => {
     enterApp();
     // Refresh profile
     api('GET', '/auth/profil').then(data => {
-      if (data && (data.vendeur || data.client || data.user)) {
-        userData = data.vendeur || data.client || data.user;
+      if (data && data.profil) {
+        userData = data.profil;
         localStorage.setItem('pp_user', JSON.stringify(userData));
       }
     });

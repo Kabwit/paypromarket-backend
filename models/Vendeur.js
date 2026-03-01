@@ -12,8 +12,8 @@ const Vendeur = sequelize.define('Vendeur', {
     allowNull: false
   },
   type_boutique: {
-    type: DataTypes.ENUM('détaillant', 'grossiste'),
-    allowNull: false
+    type: DataTypes.STRING,
+    defaultValue: 'détaillant'
   },
   logo: {
     type: DataTypes.STRING,
@@ -29,7 +29,6 @@ const Vendeur = sequelize.define('Vendeur', {
   },
   email: {
     type: DataTypes.STRING,
-    allowNull: false,
     unique: true,
     validate: { isEmail: true }
   },
@@ -39,10 +38,10 @@ const Vendeur = sequelize.define('Vendeur', {
   },
   ville: {
     type: DataTypes.STRING,
-    allowNull: false
+    defaultValue: ''
   },
   categorie_boutique: {
-    type: DataTypes.ENUM('alimentaire', 'cosmétique', 'vêtements', 'artisanat', 'électronique', 'services', 'autre'),
+    type: DataTypes.STRING,
     defaultValue: 'autre'
   },
   langue: {

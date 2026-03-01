@@ -96,25 +96,26 @@ exports.confirmerPaiement = async (req, res) => {
       await commande.update({ statut: 'confirmée' });
     }
 
-    // Notification vendeur
-    await Notification.create({
-      destinataire_type: 'vendeur',
-      destinataire_id: commande.vendeur_id,
-      titre: 'Paiement reçu',
-      message: `Paiement de ${paiement.montant} ${paiement.devise} reçu pour la commande ${commande.numero_commande}.`,
-      type: 'paiement_reçu',
-      donnees: { commande_id: commande.id, paiement_id: paiement.id }
-    });
+    // Notifications (seulement si la commande existe)
+    if (commande) {
+      await Notification.create({
+        destinataire_type: 'vendeur',
+        destinataire_id: commande.vendeur_id,
+        titre: 'Paiement reçu',
+        message: `Paiement de ${paiement.montant} ${paiement.devise} reçu pour la commande ${commande.numero_commande}.`,
+        type: 'paiement_reçu',
+        donnees: { commande_id: commande.id, paiement_id: paiement.id }
+      });
 
-    // Notification client
-    await Notification.create({
-      destinataire_type: 'client',
-      destinataire_id: commande.client_id,
-      titre: 'Paiement confirmé',
-      message: `Votre paiement de ${paiement.montant} ${paiement.devise} a été confirmé.`,
-      type: 'paiement_reçu',
-      donnees: { commande_id: commande.id, paiement_id: paiement.id }
-    });
+      await Notification.create({
+        destinataire_type: 'client',
+        destinataire_id: commande.client_id,
+        titre: 'Paiement confirmé',
+        message: `Votre paiement de ${paiement.montant} ${paiement.devise} a été confirmé.`,
+        type: 'paiement_reçu',
+        donnees: { commande_id: commande.id, paiement_id: paiement.id }
+      });
+    }
 
     res.status(200).json({
       message: 'Paiement confirmé',
@@ -142,16 +143,18 @@ exports.echecPaiement = async (req, res) => {
 
     await paiement.update({ statut: 'échoué' });
 
-    // Notification client
+    // Notification client (seulement si la commande existe)
     const commande = await Commande.findByPk(paiement.commande_id);
-    await Notification.create({
-      destinataire_type: 'client',
-      destinataire_id: commande.client_id,
-      titre: 'Paiement échoué',
-      message: `Votre paiement pour la commande ${commande.numero_commande} a échoué. Veuillez réessayer.`,
-      type: 'paiement_échoué',
-      donnees: { commande_id: commande.id, paiement_id: paiement.id }
-    });
+    if (commande) {
+      await Notification.create({
+        destinataire_type: 'client',
+        destinataire_id: commande.client_id,
+        titre: 'Paiement échoué',
+        message: `Votre paiement pour la commande ${commande.numero_commande} a échoué. Veuillez réessayer.`,
+        type: 'paiement_échoué',
+        donnees: { commande_id: commande.id, paiement_id: paiement.id }
+      });
+    }
 
     res.status(200).json({
       message: 'Paiement marqué comme échoué',

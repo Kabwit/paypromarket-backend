@@ -27,6 +27,7 @@ app.use(helmet({
       workerSrc: ["'self'", "blob:"],
       childSrc: ["'self'", "blob:"],
       frameSrc: ["'self'", "blob:"],
+      scriptSrcAttr: ["'unsafe-inline'"],
       upgradeInsecureRequests: null,
     }
   },
@@ -161,7 +162,7 @@ sequelize.sync({ alter: true })
     app.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Serveur PayPro Market démarré sur le port ${PORT}`);
       console.log(`📍 Local:   http://localhost:${PORT}`);
-      console.log(`📍 Réseau:  http://192.168.1.121:${PORT}`);
+      console.log(`📍 Réseau:  http://10.242.164.149:${PORT}`);
     });
   })
   .catch(err => {

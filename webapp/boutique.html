@@ -951,8 +951,8 @@ function renderShop() {
   document.title = s.nom_boutique + ' - PayPro Market RDC';
 
   // Logo
-  const logoHtml = s.logo_boutique
-    ? `<img src="${imgUrl(s.logo_boutique)}" alt="${s.nom_boutique}">`
+  const logoHtml = s.logo
+    ? `<img src="${imgUrl(s.logo)}" alt="${s.nom_boutique}">`
     : `<i class="fas fa-store"></i>`;
   document.getElementById('heroLogo').innerHTML = logoHtml;
   document.getElementById('headerLogo').innerHTML = logoHtml;
@@ -963,7 +963,7 @@ function renderShop() {
   document.getElementById('footerBrand').textContent = s.nom_boutique;
   document.getElementById('heroSubtitle').textContent = s.description || 'Bienvenue dans notre boutique en ligne !';
   document.getElementById('heroCity').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${s.ville || 'RDC'}`;
-  document.getElementById('heroCategory').innerHTML = `<i class="fas fa-tag"></i> ${s.categorie_principale || s.type_boutique || 'Boutique'}`;
+  document.getElementById('heroCategory').innerHTML = `<i class="fas fa-tag"></i> ${s.categorie_boutique || s.type_boutique || 'Boutique'}`;
   document.getElementById('heroProductCount').textContent = allProducts.length;
 
   // WhatsApp contact
@@ -1037,9 +1037,10 @@ function renderProducts() {
 
   grid.innerHTML = filteredProducts.map(p => {
     const photo = p.photos?.[0] ? imgUrl(p.photos[0]) : '';
-    const hasPromo = p.prix_promo && p.prix_promo < p.prix;
-    const price = hasPromo ? p.prix_promo : p.prix;
-    const discount = hasPromo ? Math.round((1 - p.prix_promo / p.prix) * 100) : 0;
+    const hasPromo = p.promotion && p.pourcentage_promotion > 0;
+    const promoPrice = hasPromo ? Math.round(p.prix_cdf * (1 - p.pourcentage_promotion / 100)) : p.prix_cdf;
+    const price = hasPromo ? promoPrice : p.prix_cdf;
+    const discount = hasPromo ? p.pourcentage_promotion : 0;
     const isNew = isRecent(p.createdAt);
     const stockLevel = p.stock > 10 ? 'in' : p.stock > 0 ? 'low' : 'out';
     const stockText = p.stock > 10 ? 'En stock' : p.stock > 0 ? `Plus que ${p.stock}` : 'Rupture';
@@ -1065,7 +1066,7 @@ function renderProducts() {
         <div class="product-card-title">${p.nom}</div>
         <div class="product-card-prices">
           <span class="product-card-price">${formatFC(price)}</span>
-          ${hasPromo ? `<span class="product-card-old-price">${formatFC(p.prix)}</span>` : ''}
+          ${hasPromo ? `<span class="product-card-old-price">${formatFC(p.prix_cdf)}</span>` : ''}
         </div>
         <div class="product-card-stock">
           <span class="stock-dot stock-${stockLevel}"></span>
@@ -1085,9 +1086,10 @@ function showProduct(id) {
   modalQty = 1;
 
   const photos = p.photos || [];
-  const hasPromo = p.prix_promo && p.prix_promo < p.prix;
-  const price = hasPromo ? p.prix_promo : p.prix;
-  const discount = hasPromo ? Math.round((1 - p.prix_promo / p.prix) * 100) : 0;
+  const hasPromo = p.promotion && p.pourcentage_promotion > 0;
+  const promoPrice = hasPromo ? Math.round(p.prix_cdf * (1 - p.pourcentage_promotion / 100)) : p.prix_cdf;
+  const price = hasPromo ? promoPrice : p.prix_cdf;
+  const discount = hasPromo ? p.pourcentage_promotion : 0;
   const waNum = shopData.telephone ? formatPhoneWA(shopData.telephone) : '';
 
   document.getElementById('productModalContent').innerHTML = `
@@ -1109,7 +1111,7 @@ function showProduct(id) {
         <h2 class="modal-title">${p.nom}</h2>
         <div class="modal-prices">
           <span class="modal-price">${formatFC(price)}</span>
-          ${hasPromo ? `<span class="modal-old-price">${formatFC(p.prix)}</span>
+          ${hasPromo ? `<span class="modal-old-price">${formatFC(p.prix_cdf)}</span>
             <span class="modal-promo-badge">-${discount}%</span>` : ''}
         </div>
         <div class="modal-stock ${p.stock > 0 ? 'in-stock' : 'out-stock'}">
@@ -1162,7 +1164,8 @@ function changeModalQty(d) {
   const p = document.getElementById('productModal')._product;
   modalQty = Math.max(1, Math.min(modalQty + d, p?.stock || 99));
   document.getElementById('modalQtyDisplay').textContent = modalQty;
-  const price = (p.prix_promo && p.prix_promo < p.prix) ? p.prix_promo : p.prix;
+  const hasP = p.promotion && p.pourcentage_promotion > 0;
+  const price = hasP ? Math.round(p.prix_cdf * (1 - p.pourcentage_promotion / 100)) : p.prix_cdf;
   document.getElementById('modalSubtotal').textContent = formatFC(price * modalQty);
 }
 
@@ -1180,7 +1183,7 @@ function addToCart(product, qty) {
   if (existingIdx >= 0) {
     cart[existingIdx].quantite += qty;
   } else {
-    const price = (product.prix_promo && product.prix_promo < product.prix) ? product.prix_promo : product.prix;
+    const price = (product.promotion && product.pourcentage_promotion > 0) ? Math.round(product.prix_cdf * (1 - product.pourcentage_promotion / 100)) : product.prix_cdf;
     cart.push({
       id: product.id,
       nom: product.nom,
@@ -1297,11 +1300,11 @@ async function submitCheckout() {
   if (token) {
     try {
       const body = {
+        vendeur_id: shopData.id,
         adresse_livraison: address,
-        ville_livraison: document.getElementById('checkCity').value,
-        telephone_contact: phone,
+        telephone_livraison: phone,
         notes: document.getElementById('checkNotes').value,
-        lignes: cart.map(c => ({ produit_id: c.id, quantite: c.quantite }))
+        items: cart.map(c => ({ produit_id: c.id, quantite: c.quantite }))
       };
       const res = await fetch(API + '/commandes', {
         method: 'POST',
@@ -1360,7 +1363,8 @@ function orderViaWhatsApp(name, phone, address) {
 function askProductWA(productId) {
   const p = allProducts.find(pr => pr.id === productId);
   if (!p || !shopData?.telephone) return;
-  const price = (p.prix_promo && p.prix_promo < p.prix) ? p.prix_promo : p.prix;
+  const hasP = p.promotion && p.pourcentage_promotion > 0;
+  const price = hasP ? Math.round(p.prix_cdf * (1 - p.pourcentage_promotion / 100)) : p.prix_cdf;
   const msg = `Bonjour ! Je suis intéressé(e) par *${p.nom}* à ${formatFC(price)} dans votre boutique ${shopData.nom_boutique} sur PayPro Market. Est-ce encore disponible ?`;
   const waNum = formatPhoneWA(shopData.telephone);
   window.open(`https://wa.me/${waNum}?text=${encodeURIComponent(msg)}`, '_blank');
@@ -1395,10 +1399,11 @@ function formatFC(n) {
   return new Intl.NumberFormat('fr-CD').format(Math.round(n)) + ' FC';
 }
 
-function imgUrl(path) {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-  return window.location.origin + '/' + path;
+function imgUrl(p) {
+  if (!p) return '';
+  if (p.startsWith('http')) return p;
+  if (p.startsWith('/')) return window.location.origin + p;
+  return window.location.origin + '/' + p;
 }
 
 function formatPhoneWA(phone) {

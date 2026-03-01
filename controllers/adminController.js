@@ -622,12 +622,19 @@ exports.sendNotification = async (req, res) => {
   try {
     const { titre, message, destinataire_type, destinataire_id } = req.body;
 
+    if (!destinataire_type || !['vendeur', 'client'].includes(destinataire_type)) {
+      return res.status(400).json({ error: 'destinataire_type doit être vendeur ou client' });
+    }
+    if (!destinataire_id) {
+      return res.status(400).json({ error: 'destinataire_id est requis' });
+    }
+
     const notification = await Notification.create({
       titre,
       message,
-      type: 'admin',
-      destinataire_type: destinataire_type || 'tous',
-      destinataire_id: destinataire_id || null
+      type: 'système',
+      destinataire_type,
+      destinataire_id
     });
 
     res.status(201).json({ message: 'Notification envoyée', notification });

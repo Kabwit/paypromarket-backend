@@ -10,10 +10,12 @@ exports.inscriptionVendeur = async (req, res) => {
   try {
     const { nom_boutique, type_boutique, telephone, email, mot_de_passe, ville, categorie_boutique, description } = req.body;
 
-    // Vérifier si le vendeur existe déjà
-    const vendeurExiste = await Vendeur.findOne({ where: { email } });
-    if (vendeurExiste) {
-      return res.status(400).json({ error: 'Un compte vendeur avec cet email existe déjà' });
+    // Vérifier si le vendeur existe déjà (email optionnel)
+    if (email) {
+      const vendeurExiste = await Vendeur.findOne({ where: { email } });
+      if (vendeurExiste) {
+        return res.status(400).json({ error: 'Un compte vendeur avec cet email existe déjà' });
+      }
     }
 
     const telephoneExiste = await Vendeur.findOne({ where: { telephone } });
