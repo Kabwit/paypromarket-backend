@@ -35,7 +35,7 @@ exports.updateProfil = async (req, res) => {
 
     const champsAutorisés = [
       'nom_boutique', 'description', 'ville', 'langue',
-      'categorie_boutique', 'adresse', 'mode_livraison'
+      'categorie_boutique', 'adresse', 'mode_livraison', 'theme'
     ];
 
     const updates = {};
@@ -147,6 +147,51 @@ exports.getBoutiques = async (req, res) => {
         total,
         pages: Math.ceil(total / limit)
       }
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// =============================================
+// METTRE À JOUR LE THÈME DE LA BOUTIQUE
+// =============================================
+exports.updateTheme = async (req, res) => {
+  try {
+    const vendeur = await Vendeur.findByPk(req.user.id);
+    if (!vendeur) {
+      return res.status(404).json({ error: 'Vendeur non trouvé' });
+    }
+
+    const currentTheme = vendeur.theme || {};
+    const newTheme = { ...currentTheme, ...req.body };
+
+    // Valider les valeurs autorisées
+    const policesAutorisees = ['Inter', 'Poppins', 'Roboto', 'Montserrat', 'Playfair Display'];
+    const affichagesAutorisés = ['grille', 'liste', 'grande_grille'];
+    const stylesHero = ['gradient', 'image', 'minimal'];
+
+    if (newTheme.police && !policesAutorisees.includes(newTheme.police)) {
+      newTheme.police = 'Inter';
+    }
+    if (newTheme.affichage_produits && !affichagesAutorisés.includes(newTheme.affichage_produits)) {
+      newTheme.affichage_produits = 'grille';
+    }
+    if (newTheme.style_hero && !stylesHero.includes(newTheme.style_hero)) {
+      newTheme.style_hero = 'gradient';
+    }
+    if (newTheme.colonnes_produits) {
+      newTheme.colonnes_produits = Math.max(1, Math.min(4, parseInt(newTheme.colonnes_produits) || 2));
+    }
+    if (newTheme.arrondi_cartes !== undefined) {
+      newTheme.arrondi_cartes = Math.max(0, Math.min(30, parseInt(newTheme.arrondi_cartes) || 12));
+    }
+
+    await vendeur.update({ theme: newTheme });
+
+    res.status(200).json({
+      message: 'Thème mis à jour',
+      theme: newTheme
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

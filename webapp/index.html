@@ -223,6 +223,15 @@
     .btn-sm { padding: 8px 14px; font-size: 12px; }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
+    .theme-opt-btn {
+      flex: 1; padding: 10px 12px; border: 2px solid var(--divider); border-radius: 10px;
+      background: var(--surface); color: var(--text-secondary); font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 6px;
+      font-family: inherit;
+    }
+    .theme-opt-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .theme-opt-btn.active { border-color: var(--primary); background: rgba(27,94,32,0.08); color: var(--primary); }
+
     .auth-switch {
       text-align: center;
       margin-top: 16px;
@@ -1940,6 +1949,9 @@ function renderVendeurProfile() {
         <div class="profile-row"><span class="profile-row-label"><i class="fas fa-tag"></i> Catégorie</span><span class="profile-row-value">${u.categorie_boutique||'-'}</span></div>
       </div>
       ${u.description ? `<div class="profile-card"><div class="profile-card-title">Description</div><p style="font-size:13px;color:var(--text-secondary);">${u.description}</p></div>` : ''}
+      <button class="btn btn-primary mb-12" onclick="showThemeEditor()">
+        <i class="fas fa-palette"></i> Personnaliser ma boutique
+      </button>
       <button class="btn btn-outline mb-12" onclick="showEditProfile()">
         <i class="fas fa-edit"></i> Modifier le profil
       </button>
@@ -1980,6 +1992,207 @@ async function updateVendeurProfile(e) {
     renderVendeurProfile();
   } else {
     toast(res?.error || 'Erreur', 'error');
+  }
+}
+
+// =============================================
+// THEME EDITOR
+// =============================================
+function showThemeEditor() {
+  const t = (userData?.theme) || {};
+  const couleurPrimaire = t.couleur_primaire || '#1B5E20';
+  const couleurAccent = t.couleur_accent || '#FF9800';
+  const couleurFond = t.couleur_fond || '#FAFAFA';
+  const couleurTexte = t.couleur_texte || '#1A1A1A';
+  const affichage = t.affichage_produits || 'grille';
+  const colonnes = t.colonnes_produits || 2;
+  const arrondi = t.arrondi_cartes ?? 12;
+  const police = t.police || 'Inter';
+  const styleHero = t.style_hero || 'gradient';
+  const afficherPartage = t.afficher_partage !== false;
+  const afficherRecherche = t.afficher_recherche !== false;
+  const afficherCategories = t.afficher_categories !== false;
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-title"><i class="fas fa-palette"></i> Personnaliser ma boutique</div>
+    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">
+      Personnalisez l'apparence de votre boutique en ligne. Les changements seront visibles immédiatement par vos clients.
+    </p>
+
+    <div style="background:linear-gradient(135deg,${couleurPrimaire},${couleurAccent});border-radius:12px;padding:20px;color:white;margin-bottom:16px;text-align:center;" id="themePreview">
+      <div style="font-size:18px;font-weight:700;">${userData?.nom_boutique || 'Ma Boutique'}</div>
+      <div style="font-size:12px;opacity:0.8;margin-top:4px;">Aperçu du thème</div>
+    </div>
+
+    <form onsubmit="saveTheme(event)" style="max-height:55vh;overflow-y:auto;padding-right:4px;">
+      <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:var(--primary);"><i class="fas fa-tint"></i> Couleurs</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="font-size:12px;">Couleur principale</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="color" id="thCouleurPrimaire" value="${couleurPrimaire}" style="width:40px;height:36px;border:none;cursor:pointer;border-radius:6px;" onchange="updateThemePreview()">
+            <span style="font-size:11px;color:var(--text-secondary);">${couleurPrimaire}</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="font-size:12px;">Couleur accent</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="color" id="thCouleurAccent" value="${couleurAccent}" style="width:40px;height:36px;border:none;cursor:pointer;border-radius:6px;" onchange="updateThemePreview()">
+            <span style="font-size:11px;color:var(--text-secondary);">${couleurAccent}</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="font-size:12px;">Fond de page</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="color" id="thCouleurFond" value="${couleurFond}" style="width:40px;height:36px;border:none;cursor:pointer;border-radius:6px;">
+            <span style="font-size:11px;color:var(--text-secondary);">${couleurFond}</span>
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label style="font-size:12px;">Couleur texte</label>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <input type="color" id="thCouleurTexte" value="${couleurTexte}" style="width:40px;height:36px;border:none;cursor:pointer;border-radius:6px;">
+            <span style="font-size:11px;color:var(--text-secondary);">${couleurTexte}</span>
+          </div>
+        </div>
+      </div>
+
+      <div style="font-weight:600;font-size:14px;margin-bottom:10px;color:var(--primary);"><i class="fas fa-th"></i> Affichage des produits</div>
+      <div class="form-group">
+        <label style="font-size:12px;">Disposition</label>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="theme-opt-btn ${affichage==='grille'?'active':''}" onclick="selectThemeOpt(this,'thAffichage','grille')">
+            <i class="fas fa-th"></i> Grille
+          </button>
+          <button type="button" class="theme-opt-btn ${affichage==='liste'?'active':''}" onclick="selectThemeOpt(this,'thAffichage','liste')">
+            <i class="fas fa-list"></i> Liste
+          </button>
+          <button type="button" class="theme-opt-btn ${affichage==='grande_grille'?'active':''}" onclick="selectThemeOpt(this,'thAffichage','grande_grille')">
+            <i class="fas fa-th-large"></i> Grande
+          </button>
+        </div>
+        <input type="hidden" id="thAffichage" value="${affichage}">
+      </div>
+
+      <div class="form-group">
+        <label style="font-size:12px;">Colonnes (grille) : <strong id="colVal">${colonnes}</strong></label>
+        <input type="range" id="thColonnes" min="1" max="4" value="${colonnes}" style="width:100%;" oninput="document.getElementById('colVal').textContent=this.value">
+      </div>
+
+      <div class="form-group">
+        <label style="font-size:12px;">Arrondi des cartes : <strong id="arrondiVal">${arrondi}px</strong></label>
+        <input type="range" id="thArrondi" min="0" max="30" value="${arrondi}" style="width:100%;" oninput="document.getElementById('arrondiVal').textContent=this.value+'px'">
+      </div>
+
+      <div style="font-weight:600;font-size:14px;margin:12px 0 10px;color:var(--primary);"><i class="fas fa-font"></i> Typographie & Style</div>
+      <div class="form-group">
+        <label style="font-size:12px;">Police</label>
+        <select id="thPolice" style="width:100%;padding:10px;border:1px solid var(--divider);border-radius:8px;font-size:13px;">
+          ${['Inter','Poppins','Roboto','Montserrat','Playfair Display'].map(f =>
+            `<option value="${f}" ${f===police?'selected':''} style="font-family:'${f}';">${f}</option>`
+          ).join('')}
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label style="font-size:12px;">Style du hero (bannière)</label>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="theme-opt-btn ${styleHero==='gradient'?'active':''}" onclick="selectThemeOpt(this,'thStyleHero','gradient')">
+            <i class="fas fa-fill-drip"></i> Dégradé
+          </button>
+          <button type="button" class="theme-opt-btn ${styleHero==='image'?'active':''}" onclick="selectThemeOpt(this,'thStyleHero','image')">
+            <i class="fas fa-image"></i> Image
+          </button>
+          <button type="button" class="theme-opt-btn ${styleHero==='minimal'?'active':''}" onclick="selectThemeOpt(this,'thStyleHero','minimal')">
+            <i class="fas fa-minus"></i> Minimal
+          </button>
+        </div>
+        <input type="hidden" id="thStyleHero" value="${styleHero}">
+      </div>
+
+      <div style="font-weight:600;font-size:14px;margin:12px 0 10px;color:var(--primary);"><i class="fas fa-eye"></i> Visibilité</div>
+      <div style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px;">
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="thPartage" ${afficherPartage?'checked':''} style="width:18px;height:18px;accent-color:var(--primary);">
+          Afficher les boutons de partage
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="thRecherche" ${afficherRecherche?'checked':''} style="width:18px;height:18px;accent-color:var(--primary);">
+          Afficher la barre de recherche
+        </label>
+        <label style="display:flex;align-items:center;gap:8px;font-size:13px;cursor:pointer;">
+          <input type="checkbox" id="thCategories" ${afficherCategories?'checked':''} style="width:18px;height:18px;accent-color:var(--primary);">
+          Afficher le filtre par catégories
+        </label>
+      </div>
+
+      <div style="display:flex;gap:8px;">
+        <button type="submit" class="btn btn-primary" style="flex:1;"><i class="fas fa-save"></i> Enregistrer</button>
+        <button type="button" class="btn btn-outline" onclick="resetTheme()" style="flex:0 0 auto;"><i class="fas fa-undo"></i> Réinitialiser</button>
+      </div>
+    </form>`;
+  openModal();
+}
+
+function selectThemeOpt(btn, inputId, value) {
+  btn.parentElement.querySelectorAll('.theme-opt-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById(inputId).value = value;
+  if (inputId === 'thAffichage' || inputId === 'thStyleHero') updateThemePreview();
+}
+
+function updateThemePreview() {
+  const p = document.getElementById('thCouleurPrimaire').value;
+  const a = document.getElementById('thCouleurAccent').value;
+  const preview = document.getElementById('themePreview');
+  if (preview) preview.style.background = `linear-gradient(135deg, ${p}, ${a})`;
+}
+
+async function saveTheme(e) {
+  e.preventDefault();
+  const theme = {
+    couleur_primaire: document.getElementById('thCouleurPrimaire').value,
+    couleur_accent: document.getElementById('thCouleurAccent').value,
+    couleur_fond: document.getElementById('thCouleurFond').value,
+    couleur_texte: document.getElementById('thCouleurTexte').value,
+    affichage_produits: document.getElementById('thAffichage').value,
+    colonnes_produits: parseInt(document.getElementById('thColonnes').value),
+    arrondi_cartes: parseInt(document.getElementById('thArrondi').value),
+    police: document.getElementById('thPolice').value,
+    style_hero: document.getElementById('thStyleHero').value,
+    afficher_partage: document.getElementById('thPartage').checked,
+    afficher_recherche: document.getElementById('thRecherche').checked,
+    afficher_categories: document.getElementById('thCategories').checked
+  };
+
+  const res = await api('PUT', '/vendeurs/theme', theme);
+  if (res && !res.error) {
+    userData.theme = res.theme || theme;
+    localStorage.setItem('pp_user', JSON.stringify(userData));
+    toast('Thème enregistré ! Vos clients verront les changements.', 'success');
+    closeModal();
+    renderVendeurProfile();
+  } else {
+    toast(res?.error || 'Erreur', 'error');
+  }
+}
+
+async function resetTheme() {
+  if (!confirm('Réinitialiser le thème par défaut ?')) return;
+  const defaultTheme = {
+    couleur_primaire: '#1B5E20', couleur_accent: '#FF9800',
+    couleur_fond: '#FAFAFA', couleur_texte: '#1A1A1A',
+    affichage_produits: 'grille', colonnes_produits: 2,
+    arrondi_cartes: 12, police: 'Inter', style_hero: 'gradient',
+    afficher_partage: true, afficher_recherche: true, afficher_categories: true
+  };
+  const res = await api('PUT', '/vendeurs/theme', defaultTheme);
+  if (res && !res.error) {
+    userData.theme = defaultTheme;
+    localStorage.setItem('pp_user', JSON.stringify(userData));
+    toast('Thème réinitialisé', 'success');
+    closeModal();
+    renderVendeurProfile();
   }
 }
 

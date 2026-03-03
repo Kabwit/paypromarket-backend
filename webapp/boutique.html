@@ -363,6 +363,12 @@
     .stock-low { background: var(--accent); }
     .stock-out { background: var(--error); }
 
+    /* ===== LAYOUT LIST MODE ===== */
+    .layout-list .product-card { display: flex; flex-direction: row; }
+    .layout-list .product-card-img-wrap { width: 130px; min-height: 130px; flex-shrink: 0; }
+    .layout-list .product-card-img { height: 100%; }
+    .layout-list .product-card-body { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+
     /* ===== PRODUCT DETAIL MODAL ===== */
     .modal-overlay {
       display: none; position: fixed;
@@ -944,11 +950,116 @@ function showNotFound() {
 }
 
 // =============================================
+// APPLIQUER LE THÈME PERSONNALISÉ
+// =============================================
+function applyTheme(theme) {
+  if (!theme) return;
+  const t = theme;
+  const root = document.documentElement;
+
+  // Couleurs
+  if (t.couleur_primaire) {
+    root.style.setProperty('--primary', t.couleur_primaire);
+    // Générer les variantes
+    const hex = t.couleur_primaire;
+    root.style.setProperty('--primary-light', adjustColor(hex, 40));
+    root.style.setProperty('--primary-dark', adjustColor(hex, -30));
+    root.style.setProperty('--primary-50', hexToRgba(hex, 0.06));
+    root.style.setProperty('--primary-100', hexToRgba(hex, 0.12));
+  }
+  if (t.couleur_accent) {
+    root.style.setProperty('--accent', t.couleur_accent);
+    root.style.setProperty('--accent-dark', adjustColor(t.couleur_accent, -15));
+  }
+  if (t.couleur_fond) {
+    root.style.setProperty('--bg', t.couleur_fond);
+  }
+  if (t.couleur_texte) {
+    root.style.setProperty('--text-primary', t.couleur_texte);
+  }
+
+  // Police
+  if (t.police && t.police !== 'Inter') {
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = `https://fonts.googleapis.com/css2?family=${t.police.replace(/ /g, '+')}:wght@300;400;500;600;700;800;900&display=swap`;
+    document.head.appendChild(link);
+    document.body.style.fontFamily = `'${t.police}', -apple-system, BlinkMacSystemFont, sans-serif`;
+  }
+
+  // Arrondi des cartes
+  if (t.arrondi_cartes !== undefined) {
+    root.style.setProperty('--radius', t.arrondi_cartes + 'px');
+    root.style.setProperty('--radius-sm', Math.max(0, t.arrondi_cartes - 4) + 'px');
+    root.style.setProperty('--radius-lg', (t.arrondi_cartes + 4) + 'px');
+  }
+
+  // Style hero
+  const hero = document.querySelector('.hero');
+  if (hero && t.style_hero === 'minimal') {
+    hero.style.background = t.couleur_fond || '#FAFAFA';
+    hero.style.color = t.couleur_texte || '#1A1A1A';
+    hero.style.padding = '32px 20px';
+    hero.querySelectorAll('.hero-stat-label, .hero-subtitle, .hero-meta span').forEach(el => el.style.opacity = '0.7');
+  } else if (hero && t.style_hero === 'image' && t.banniere_url) {
+    hero.style.background = `linear-gradient(rgba(0,0,0,0.55), rgba(0,0,0,0.55)), url('${imgUrl(t.banniere_url)}') center/cover`;
+  }
+
+  // Affichage des produits (grille / liste / grande_grille)
+  const grid = document.getElementById('productGrid');
+  if (grid) {
+    const cols = t.colonnes_produits || 2;
+    if (t.affichage_produits === 'liste') {
+      grid.style.gridTemplateColumns = '1fr';
+      grid.classList.add('layout-list');
+    } else if (t.affichage_produits === 'grande_grille') {
+      grid.style.gridTemplateColumns = '1fr';
+    } else {
+      grid.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+    }
+  }
+
+  // Visibilité des sections
+  if (t.afficher_partage === false) {
+    const shareSection = document.querySelector('.hero-share');
+    if (shareSection) shareSection.style.display = 'none';
+  }
+  if (t.afficher_recherche === false) {
+    const searchWrap = document.querySelector('.toolbar-search');
+    if (searchWrap) searchWrap.style.display = 'none';
+  }
+  if (t.afficher_categories === false) {
+    const catSection = document.getElementById('categoryFilters');
+    if (catSection) catSection.style.display = 'none';
+  }
+}
+
+// Utilitaires couleurs pour le thème
+function hexToRgba(hex, alpha) {
+  hex = hex.replace('#', '');
+  const r = parseInt(hex.substring(0, 2), 16);
+  const g = parseInt(hex.substring(2, 4), 16);
+  const b = parseInt(hex.substring(4, 6), 16);
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+function adjustColor(hex, amount) {
+  hex = hex.replace('#', '');
+  let r = Math.max(0, Math.min(255, parseInt(hex.substring(0, 2), 16) + amount));
+  let g = Math.max(0, Math.min(255, parseInt(hex.substring(2, 4), 16) + amount));
+  let b = Math.max(0, Math.min(255, parseInt(hex.substring(4, 6), 16) + amount));
+  return `#${r.toString(16).padStart(2,'0')}${g.toString(16).padStart(2,'0')}${b.toString(16).padStart(2,'0')}`;
+}
+
+// =============================================
 // RENDER SHOP
 // =============================================
 function renderShop() {
   const s = shopData;
   document.title = s.nom_boutique + ' - PayPro Market RDC';
+
+  // ===== APPLIQUER LE THÈME PERSONNALISÉ =====
+  applyTheme(s.theme);
 
   // Logo
   const logoHtml = s.logo

@@ -59,6 +59,24 @@ const Vendeur = sequelize.define('Vendeur', {
     type: DataTypes.JSON,
     defaultValue: ['retrait_boutique']
     // Valeurs possibles: retrait_boutique, livraison_locale, service_tiers
+  },
+  theme: {
+    type: DataTypes.JSON,
+    defaultValue: {
+      couleur_primaire: '#1B5E20',
+      couleur_accent: '#FF9800',
+      couleur_fond: '#FAFAFA',
+      couleur_texte: '#1A1A1A',
+      banniere_url: null,
+      affichage_produits: 'grille',  // grille | liste | grande_grille
+      colonnes_produits: 2,          // 1, 2, 3, 4
+      arrondi_cartes: 12,            // 0-30
+      police: 'Inter',               // Inter, Poppins, Roboto, Montserrat, Playfair Display
+      style_hero: 'gradient',        // gradient | image | minimal
+      afficher_partage: true,
+      afficher_recherche: true,
+      afficher_categories: true
+    }
   }
 }, { timestamps: true });
 

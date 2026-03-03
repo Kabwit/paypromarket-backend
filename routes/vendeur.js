@@ -6,6 +6,7 @@ const {
   getMonProfil,
   updateProfil,
   uploadLogo: uploadLogoCtrl,
+  updateTheme,
   getBoutiqueBySlug,
   getBoutiques,
   addZoneLivraison,
@@ -22,6 +23,7 @@ router.get('/boutique/:slug', getBoutiqueBySlug);
 router.get('/profil', authVendeur, getMonProfil);
 router.put('/profil', authVendeur, updateProfil);
 router.post('/logo', authVendeur, uploadLogo, uploadLogoCtrl);
+router.put('/theme', authVendeur, updateTheme);
 
 // Zones de livraison
 router.post('/zones-livraison', authVendeur, addZoneLivraison);
