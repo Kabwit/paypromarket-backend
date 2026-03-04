@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const { authAdmin, authSuperAdmin } = require('../middleware/auth');
 const adminController = require('../controllers/adminController');
+const verificationController = require('../controllers/verificationController');
+const signalementController = require('../controllers/signalementController');
+const premiumController = require('../controllers/premiumController');
 
 // =============================================
 // AUTH ADMIN (pas besoin d'être authentifié)
@@ -44,6 +47,18 @@ router.get('/paiements', authAdmin, adminController.getAllPaiements);
 
 // --- NOTIFICATIONS ---
 router.post('/notifications', authAdmin, adminController.sendNotification);
+
+// --- VÉRIFICATIONS ---
+router.get('/verifications', authAdmin, verificationController.getAllVerifications);
+router.put('/verifications/:id/approuver', authAdmin, verificationController.approuverVerification);
+router.put('/verifications/:id/rejeter', authAdmin, verificationController.rejeterVerification);
+
+// --- SIGNALEMENTS ---
+router.get('/signalements', authAdmin, signalementController.getAllSignalements);
+router.put('/signalements/:id/traiter', authAdmin, signalementController.traiterSignalement);
+
+// --- PREMIUM ---
+router.post('/premium/attribuer/:vendeurId', authAdmin, premiumController.attribuerPlan);
 
 // =============================================
 // ROUTES SUPER ADMIN (gestion des admins)

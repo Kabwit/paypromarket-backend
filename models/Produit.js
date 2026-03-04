@@ -63,6 +63,22 @@ const Produit = sequelize.define('Produit', {
   mis_en_avant: {
     type: DataTypes.BOOLEAN,
     defaultValue: false
+  },
+  stock_minimum: {
+    type: DataTypes.INTEGER,
+    defaultValue: 5
+  },
+  unite: {
+    type: DataTypes.STRING,
+    defaultValue: null
+  },
+  note_moyenne: {
+    type: DataTypes.DECIMAL(3, 2),
+    defaultValue: null
+  },
+  nombre_avis: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
   }
 }, { timestamps: true });
 

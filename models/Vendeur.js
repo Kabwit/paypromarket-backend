@@ -77,6 +77,49 @@ const Vendeur = sequelize.define('Vendeur', {
       afficher_recherche: true,
       afficher_categories: true
     }
+  },
+  // === VÉRIFICATION ===
+  verifie: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  date_verification: {
+    type: DataTypes.DATE,
+    defaultValue: null
+  },
+  // === SCORE FIABILITÉ ===
+  score_fiabilite: {
+    type: DataTypes.DECIMAL(5, 2),
+    defaultValue: null
+  },
+  note_moyenne: {
+    type: DataTypes.DECIMAL(3, 2),
+    defaultValue: null
+  },
+  nombre_avis: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
+  },
+  nombre_ventes: {
+    type: DataTypes.INTEGER,
+    defaultValue: 0
+  },
+  // === PREMIUM ===
+  premium: {
+    type: DataTypes.BOOLEAN,
+    defaultValue: false
+  },
+  plan: {
+    type: DataTypes.ENUM('gratuit', 'premium', 'business'),
+    defaultValue: 'gratuit'
+  },
+  date_expiration_premium: {
+    type: DataTypes.DATE,
+    defaultValue: null
+  },
+  limite_produits: {
+    type: DataTypes.INTEGER,
+    defaultValue: 20
   }
 }, { timestamps: true });
 

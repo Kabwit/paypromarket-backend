@@ -1,6 +1,6 @@
 const bcrypt = require('bcryptjs');
 const { Op, fn, col, literal } = require('sequelize');
-const { Admin, Vendeur, Client, Produit, Commande, LigneCommande, Paiement, Livraison, Notification } = require('../models');
+const { Admin, Vendeur, Client, Produit, Commande, LigneCommande, Paiement, Livraison, Notification, Verification, Avis, Signalement } = require('../models');
 const { generateAdminToken } = require('../middleware/auth');
 const sequelize = require('../config/db');
 
@@ -133,9 +133,17 @@ exports.getDashboardStats = async (req, res) => {
     const nouveauxVendeursAujourdhui = await Vendeur.count({ where: { createdAt: { [Op.gte]: debutJour } } });
     const nouveauxClientsAujourdhui = await Client.count({ where: { createdAt: { [Op.gte]: debutJour } } });
 
+    // Stats vérifications & signalements
+    const [verificationsEnAttente, signalementsOuverts, vendeursVerifies, vendeursPremium] = await Promise.all([
+      Verification.count({ where: { statut: 'en_attente' } }),
+      Signalement.count({ where: { statut: { [Op.in]: ['ouvert', 'en_examen'] } } }),
+      Vendeur.count({ where: { verifie: true } }),
+      Vendeur.count({ where: { premium: true } })
+    ]);
+
     res.json({
       utilisateurs: {
-        vendeurs: { total: totalVendeurs, actifs: vendeursActifs, nouveaux_aujourdhui: nouveauxVendeursAujourdhui },
+        vendeurs: { total: totalVendeurs, actifs: vendeursActifs, verifies: vendeursVerifies, premium: vendeursPremium, nouveaux_aujourdhui: nouveauxVendeursAujourdhui },
         clients: { total: totalClients, actifs: clientsActifs, nouveaux_aujourdhui: nouveauxClientsAujourdhui }
       },
       produits: { total: totalProduits, disponibles: produitsDisponibles },
@@ -152,7 +160,11 @@ exports.getDashboardStats = async (req, res) => {
         mensuel: caMensuel || 0,
         total: caTotal || 0
       },
-      dernieres_commandes: dernieresCommandes
+      dernieres_commandes: dernieresCommandes,
+      moderations: {
+        verifications_en_attente: verificationsEnAttente,
+        signalements_ouverts: signalementsOuverts
+      }
     });
   } catch (err) {
     res.status(500).json({ error: err.message });

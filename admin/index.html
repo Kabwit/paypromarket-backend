@@ -627,6 +627,13 @@
           <i class="fas fa-money-bill-wave"></i> Paiements
         </div>
         <div class="nav-separator"></div>
+        <div class="nav-item" data-page="verifications">
+          <i class="fas fa-id-card"></i> Vérifications
+        </div>
+        <div class="nav-item" data-page="signalements">
+          <i class="fas fa-flag"></i> Signalements
+        </div>
+        <div class="nav-separator"></div>
         <div class="nav-item" data-page="admins">
           <i class="fas fa-user-shield"></i> Administrateurs
         </div>
@@ -747,6 +754,43 @@
               <h3><i class="fas fa-money-bill-wave"></i> Tous les paiements</h3>
             </div>
             <div class="card-body" id="paiementsTable">
+              <div class="loading-spinner"><div class="spinner"></div> Chargement...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== PAGE: VERIFICATIONS ===== -->
+        <div class="page" id="page-verifications">
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-id-card"></i> Vérifications d'identité</h3>
+              <select id="verifFilter" onchange="loadVerifications()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <option value="">Tous</option>
+                <option value="en_attente" selected>En attente</option>
+                <option value="approuvé">Approuvés</option>
+                <option value="rejeté">Rejetés</option>
+              </select>
+            </div>
+            <div class="card-body" id="verificationsTable">
+              <div class="loading-spinner"><div class="spinner"></div> Chargement...</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== PAGE: SIGNALEMENTS ===== -->
+        <div class="page" id="page-signalements">
+          <div class="card">
+            <div class="card-header">
+              <h3><i class="fas fa-flag"></i> Signalements</h3>
+              <select id="signaFilter" onchange="loadSignalements()" style="padding:6px 10px;border:1px solid #ddd;border-radius:6px;font-size:13px;">
+                <option value="">Tous</option>
+                <option value="ouvert" selected>Ouverts</option>
+                <option value="en_examen">En examen</option>
+                <option value="résolu">Résolus</option>
+                <option value="classé">Classés</option>
+              </select>
+            </div>
+            <div class="card-body" id="signalementsTable">
               <div class="loading-spinner"><div class="spinner"></div> Chargement...</div>
             </div>
           </div>
@@ -952,6 +996,8 @@
         case 'produits': loadProduits(); break;
         case 'commandes': loadCommandes(); break;
         case 'paiements': loadPaiements(); break;
+        case 'verifications': loadVerifications(); break;
+        case 'signalements': loadSignalements(); break;
         case 'admins': loadAdmins(); break;
       }
     }
@@ -1027,6 +1073,22 @@
               <p>CA Total</p>
             </div>
           </div>
+          ${data.moderations ? `
+          <div class="stat-card" onclick="document.querySelector('[data-page=verifications]').click()" style="cursor:pointer;">
+            <div class="stat-icon orange"><i class="fas fa-id-card"></i></div>
+            <div class="stat-info">
+              <h3>${data.moderations.verifications_en_attente}</h3>
+              <p>Vérifications en attente</p>
+            </div>
+          </div>
+          <div class="stat-card" onclick="document.querySelector('[data-page=signalements]').click()" style="cursor:pointer;">
+            <div class="stat-icon red"><i class="fas fa-flag"></i></div>
+            <div class="stat-info">
+              <h3>${data.moderations.signalements_ouverts}</h3>
+              <p>Signalements ouverts</p>
+            </div>
+          </div>
+          ` : ''}
         `;
 
         // Dernières commandes
@@ -1504,6 +1566,140 @@
         await api(`/admins/${id}`, { method: 'DELETE' });
         showToast('Admin supprimé');
         loadAdmins();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // =============================================
+    // VERIFICATIONS
+    // =============================================
+    async function loadVerifications(page = 1) {
+      try {
+        const statut = document.getElementById('verifFilter')?.value || '';
+        const params = `?page=${page}&limit=20${statut ? '&statut=' + statut : ''}`;
+        const data = await api('/verifications' + params);
+        const verifs = data.verifications || [];
+
+        if (verifs.length === 0) {
+          document.getElementById('verificationsTable').innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>Aucune vérification</p></div>';
+          return;
+        }
+
+        const typeLabels = { carte_identite: "Carte d'identité", passeport: 'Passeport', permis_conduire: 'Permis de conduire', rccm: 'RCCM', id_nat: 'ID National' };
+        const statutColors = { en_attente: 'badge-warning', 'approuvé': 'badge-success', 'rejeté': 'badge-danger' };
+
+        document.getElementById('verificationsTable').innerHTML = `
+          <table>
+            <thead><tr><th>Vendeur</th><th>Document</th><th>Numéro</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${verifs.map(v => `
+                <tr>
+                  <td><strong>${v.vendeur?.nom_boutique || v.vendeur?.nom || 'N/A'}</strong><br><small>${v.vendeur?.email || ''}</small></td>
+                  <td>${typeLabels[v.type_document] || v.type_document}</td>
+                  <td>${v.numero_document}</td>
+                  <td><span class="badge ${statutColors[v.statut] || 'badge-neutral'}">${v.statut}</span></td>
+                  <td>${formatDate(v.createdAt)}</td>
+                  <td class="actions">
+                    <button class="action-btn view" title="Voir le document" onclick="window.open('${v.image_document}', '_blank')"><i class="fas fa-eye"></i></button>
+                    ${v.statut === 'en_attente' ? `
+                      <button class="action-btn edit" title="Approuver" onclick="approuverVerification(${v.id})" style="color:#2E7D32;"><i class="fas fa-check"></i></button>
+                      <button class="action-btn delete" title="Rejeter" onclick="rejeterVerification(${v.id})"><i class="fas fa-times"></i></button>
+                    ` : ''}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          ${data.pagination ? renderPagination(data.pagination, 'loadVerifications') : ''}
+        `;
+      } catch (err) {
+        document.getElementById('verificationsTable').innerHTML = `<div class="empty-state"><p>Erreur: ${err.message}</p></div>`;
+      }
+    }
+
+    async function approuverVerification(id) {
+      if (!confirm('Approuver cette vérification ?')) return;
+      try {
+        await api(`/verifications/${id}/approuver`, { method: 'PUT' });
+        showToast('Vérification approuvée');
+        loadVerifications();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    async function rejeterVerification(id) {
+      const motif = prompt('Motif du rejet :');
+      if (motif === null) return;
+      try {
+        await api(`/verifications/${id}/rejeter`, {
+          method: 'PUT',
+          body: JSON.stringify({ motif_rejet: motif || 'Document non conforme' })
+        });
+        showToast('Vérification rejetée');
+        loadVerifications();
+      } catch (err) { showToast(err.message, 'error'); }
+    }
+
+    // =============================================
+    // SIGNALEMENTS
+    // =============================================
+    async function loadSignalements(page = 1) {
+      try {
+        const statut = document.getElementById('signaFilter')?.value || '';
+        const params = `?page=${page}&limit=20${statut ? '&statut=' + statut : ''}`;
+        const data = await api('/signalements' + params);
+        const signalements = data.signalements || [];
+
+        if (signalements.length === 0) {
+          document.getElementById('signalementsTable').innerHTML = '<div class="empty-state"><i class="fas fa-flag"></i><p>Aucun signalement</p></div>';
+          return;
+        }
+
+        const raisonLabels = { produit_contrefait: 'Contrefait', arnaque: 'Arnaque', contenu_inapproprie: 'Contenu inapproprié', prix_abusif: 'Prix abusif', non_livraison: 'Non livraison', harcelement: 'Harcèlement', autre: 'Autre' };
+        const statutColors = { ouvert: 'badge-warning', en_examen: 'badge-info', 'résolu': 'badge-success', 'classé': 'badge-neutral' };
+
+        document.getElementById('signalementsTable').innerHTML = `
+          <table>
+            <thead><tr><th>Cible</th><th>Raison</th><th>Description</th><th>Statut</th><th>Date</th><th>Actions</th></tr></thead>
+            <tbody>
+              ${signalements.map(s => `
+                <tr>
+                  <td>
+                    <span class="badge badge-neutral">${s.type_cible}</span><br>
+                    <strong>${s.cible?.nom_boutique || s.cible?.nom || 'ID: ' + s.cible_id}</strong>
+                  </td>
+                  <td>${raisonLabels[s.raison] || s.raison}</td>
+                  <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;">${s.description || '-'}</td>
+                  <td><span class="badge ${statutColors[s.statut] || 'badge-neutral'}">${s.statut}</span></td>
+                  <td>${formatDate(s.createdAt)}</td>
+                  <td class="actions">
+                    ${s.statut === 'ouvert' ? `<button class="action-btn edit" title="Mettre en examen" onclick="traiterSignalement(${s.id}, 'en_examen')"><i class="fas fa-search"></i></button>` : ''}
+                    ${['ouvert', 'en_examen'].includes(s.statut) ? `
+                      <button class="action-btn edit" title="Résoudre" onclick="traiterSignalement(${s.id}, 'résolu')" style="color:#2E7D32;"><i class="fas fa-check"></i></button>
+                      <button class="action-btn delete" title="Classer" onclick="traiterSignalement(${s.id}, 'classé')"><i class="fas fa-archive"></i></button>
+                    ` : ''}
+                  </td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+          ${data.pagination ? renderPagination(data.pagination, 'loadSignalements') : ''}
+        `;
+      } catch (err) {
+        document.getElementById('signalementsTable').innerHTML = `<div class="empty-state"><p>Erreur: ${err.message}</p></div>`;
+      }
+    }
+
+    async function traiterSignalement(id, statut) {
+      let resolution = '';
+      if (statut === 'résolu') {
+        resolution = prompt('Résolution :') || '';
+      }
+      try {
+        await api(`/signalements/${id}/traiter`, {
+          method: 'PUT',
+          body: JSON.stringify({ statut, resolution })
+        });
+        showToast('Signalement traité');
+        loadSignalements();
       } catch (err) { showToast(err.message, 'error'); }
     }
 

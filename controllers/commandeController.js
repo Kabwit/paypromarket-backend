@@ -75,7 +75,8 @@ exports.createCommande = async (req, res) => {
       );
 
       // Notification rupture de stock
-      if (produit.stock - item.quantite <= 0) {
+      const nouveauStock = produit.stock - item.quantite;
+      if (nouveauStock <= 0) {
         await Notification.create({
           destinataire_type: 'vendeur',
           destinataire_id: vendeur_id,
@@ -83,6 +84,15 @@ exports.createCommande = async (req, res) => {
           message: `Le produit "${produit.nom}" est en rupture de stock.`,
           type: 'rupture_stock',
           donnees: { produit_id: produit.id }
+        }, { transaction });
+      } else if (nouveauStock <= (produit.stock_minimum || 5)) {
+        await Notification.create({
+          destinataire_type: 'vendeur',
+          destinataire_id: vendeur_id,
+          titre: 'Stock bas',
+          message: `Le produit "${produit.nom}" a un stock bas (${nouveauStock} restant${nouveauStock > 1 ? 's' : ''}).`,
+          type: 'rupture_stock',
+          donnees: { produit_id: produit.id, stock_restant: nouveauStock }
         }, { transaction });
       }
     }

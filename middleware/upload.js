@@ -10,6 +10,8 @@ const storage = multer.diskStorage({
       uploadPath += 'logos/';
     } else if (file.fieldname === 'photos') {
       uploadPath += 'produits/';
+    } else if (file.fieldname === 'document' || file.fieldname === 'selfie') {
+      uploadPath += 'verifications/';
     } else {
       uploadPath += 'autres/';
     }
@@ -46,4 +48,14 @@ const uploadPhotos = multer({
   limits: { fileSize: 5 * 1024 * 1024 } // 5 Mo par fichier
 }).array('photos', 5);
 
-module.exports = { uploadLogo, uploadPhotos };
+// Upload pour les documents de vérification (document + selfie)
+const uploadVerification = multer({
+  storage,
+  fileFilter,
+  limits: { fileSize: 10 * 1024 * 1024 } // 10 Mo max
+}).fields([
+  { name: 'document', maxCount: 1 },
+  { name: 'selfie', maxCount: 1 }
+]);
+
+module.exports = { uploadLogo, uploadPhotos, uploadVerification };

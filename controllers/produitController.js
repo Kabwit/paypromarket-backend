@@ -1,4 +1,4 @@
-const { Produit, Vendeur } = require('../models');
+const { Produit, Vendeur, Notification } = require('../models');
 const { Op } = require('sequelize');
 const slugify = require('slugify');
 
@@ -10,8 +10,22 @@ exports.createProduit = async (req, res) => {
     const {
       nom, description, prix_cdf, prix_usd, stock,
       categorie, promotion, pourcentage_promotion,
-      delai_preparation, disponible
+      delai_preparation, disponible, stock_minimum, unite
     } = req.body;
+
+    // Vérifier la limite de produits du plan
+    const vendeur = await Vendeur.findByPk(req.user.id);
+    if (!vendeur) return res.status(404).json({ error: 'Vendeur non trouvé' });
+
+    const nbProduits = await Produit.count({ where: { vendeur_id: req.user.id } });
+    if (nbProduits >= (vendeur.limite_produits || 20)) {
+      return res.status(403).json({
+        error: `Limite de produits atteinte (${vendeur.limite_produits || 20}). Passez à un plan supérieur.`,
+        plan_actuel: vendeur.plan,
+        produits: nbProduits,
+        limite: vendeur.limite_produits || 20
+      });
+    }
 
     // Générer le slug
     let slug = slugify(nom, { lower: true, strict: true });
@@ -34,6 +48,8 @@ exports.createProduit = async (req, res) => {
       prix_cdf,
       prix_usd,
       stock: stock || 0,
+      stock_minimum: stock_minimum || 5,
+      unite: unite || null,
       categorie,
       promotion: promotion || false,
       pourcentage_promotion: pourcentage_promotion || 0,

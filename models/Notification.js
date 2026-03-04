@@ -3,7 +3,7 @@ const sequelize = require('../config/db');
 
 const Notification = sequelize.define('Notification', {
   destinataire_type: {
-    type: DataTypes.ENUM('vendeur', 'client'),
+    type: DataTypes.ENUM('vendeur', 'client', 'admin'),
     allowNull: false
   },
   destinataire_id: {

@@ -899,6 +899,12 @@
       <div id="vendeurOrdersList"></div>
     </div>
 
+    <!-- AVIS REÇUS -->
+    <div class="page" id="vendeurAvis">
+      <div class="section-header"><h3>Avis reçus</h3></div>
+      <div id="vendeurAvisList"></div>
+    </div>
+
     <!-- PROFILE -->
     <div class="page" id="vendeurProfile"></div>
   </div>
@@ -916,6 +922,9 @@
     </button>
     <button class="nav-item" onclick="showVendeurPage('orders')">
       <i class="fas fa-receipt"></i> Commandes
+    </button>
+    <button class="nav-item" onclick="showVendeurPage('avis')">
+      <i class="fas fa-star"></i> Avis
     </button>
     <button class="nav-item" onclick="showVendeurPage('profile')">
       <i class="fas fa-store"></i> Boutique
@@ -1579,6 +1588,17 @@ async function showOrderDetail(id) {
         <span>${l.Produit?.nom || l.produit?.nom || 'Produit #'+l.produit_id} × ${l.quantite}</span>
         <span style="font-weight:600;">${formatFC(l.sous_total || l.prix_unitaire * l.quantite)}</span>
       </div>`).join('')}` : ''}
+    ${o.statut === 'livrée' ? `
+    <div style="margin-top:16px;border-top:1px solid var(--divider);padding-top:12px;">
+      <button class="btn btn-primary" onclick="closeModal();showReviewForm(${o.id}, ${o.vendeur_id})" style="margin-bottom:8px;">
+        <i class="fas fa-star"></i> Laisser un avis
+      </button>
+    </div>` : ''}
+    <div style="margin-top:${o.statut === 'livrée' ? '4' : '16'}px;">
+      <button onclick="closeModal();showSignalementForm('vendeur', ${o.vendeur_id})" style="font-size:12px;color:#D32F2F;background:none;border:none;cursor:pointer;padding:4px 0;">
+        <i class="fas fa-flag"></i> Signaler un problème
+      </button>
+    </div>
   `;
   openModal();
 }
@@ -1628,7 +1648,7 @@ function showVendeurPage(page) {
   document.querySelectorAll('#vendeurNav .nav-item').forEach(n => n.classList.remove('active'));
   const fab = document.getElementById('addProductFab');
 
-  const map = { dashboard: 0, products: 1, orders: 2, profile: 3 };
+  const map = { dashboard: 0, products: 1, orders: 2, avis: 3, profile: 4 };
   if (map[page] !== undefined) {
     document.querySelectorAll('#vendeurNav .nav-item')[map[page]].classList.add('active');
   }
@@ -1651,6 +1671,10 @@ function showVendeurPage(page) {
     case 'orders':
       document.getElementById('vendeurOrders').classList.add('active');
       loadVendeurOrders();
+      break;
+    case 'avis':
+      document.getElementById('vendeurAvis').classList.add('active');
+      loadVendeurAvis();
       break;
     case 'profile':
       document.getElementById('vendeurProfile').classList.add('active');
@@ -1678,7 +1702,17 @@ async function loadDashboard() {
   if (data) {
     const boutiqueUrl = u.slug ? (window.location.origin + '/boutique/' + u.slug) : '';
     const shareMsg = encodeURIComponent(`🛍️ Découvrez ma boutique *${u.nom_boutique}* sur PayPro Market RDC !\n\n👉 ${boutiqueUrl}`);
+
+    // Badges vendeur
+    const badgeVerifie = u.verifie ? '<span style="display:inline-flex;align-items:center;gap:4px;background:#E8F5E9;color:#2E7D32;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;"><i class="fas fa-check-circle"></i> Vérifié</span>' : '<span style="display:inline-flex;align-items:center;gap:4px;background:#FFF3E0;color:#E65100;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;" onclick="showVerificationForm()"><i class="fas fa-exclamation-circle"></i> Non vérifié</span>';
+    const badgePremium = u.premium ? `<span style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#FFD700,#FFA000);color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;"><i class="fas fa-crown"></i> ${u.plan}</span>` : '';
+    const scoreBadge = u.score_fiabilite ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#E3F2FD;color:#1565C0;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;"><i class="fas fa-shield-alt"></i> Score: ${Math.round(u.score_fiabilite)}%</span>` : '';
+
     stats.innerHTML = `
+      <div style="grid-column:1/-1;display:flex;gap:6px;flex-wrap:wrap;margin-bottom:4px;">
+        ${badgeVerifie} ${badgePremium} ${scoreBadge}
+        ${u.note_moyenne ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#FFF8E1;color:#F57F17;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;"><i class="fas fa-star"></i> ${parseFloat(u.note_moyenne).toFixed(1)}/5 (${u.nombre_avis || 0} avis)</span>` : ''}
+      </div>
       <div class="stat-card"><i class="fas fa-box"></i><div class="stat-value">${data.produits?.total ?? 0}</div><div class="stat-label">Produits</div></div>
       <div class="stat-card"><i class="fas fa-receipt"></i><div class="stat-value">${data.commandes?.total ?? 0}</div><div class="stat-label">Commandes</div></div>
       <div class="stat-card"><i class="fas fa-money-bill-wave"></i><div class="stat-value">${formatFC(data.chiffre_affaires?.mensuel ?? 0)}</div><div class="stat-label">Revenus</div></div>
@@ -1698,7 +1732,25 @@ async function loadDashboard() {
             <i class="fas fa-external-link-alt"></i> Voir ma boutique
           </a>
         </div>
+      </div>` : ''}
+      ${!u.premium ? `
+      <div style="grid-column:1/-1;background:linear-gradient(135deg,#7B1FA2,#E040FB);border-radius:14px;padding:16px;color:white;cursor:pointer;" onclick="showPremiumModal()">
+        <div style="font-size:14px;font-weight:700;"><i class="fas fa-crown"></i> Passez à Premium</div>
+        <div style="font-size:12px;opacity:0.9;margin-top:4px;">Plus de produits, badges exclusifs, visibilité accrue</div>
       </div>` : ''}`;
+  }
+
+  // Stock alerts
+  const stockData = await api('GET', '/premium/stocks-bas');
+  if (stockData && stockData.alerte) {
+    const alertDiv = document.createElement('div');
+    alertDiv.style.cssText = 'grid-column:1/-1;background:#FFF3E0;border:1px solid #FFB74D;border-radius:12px;padding:14px;';
+    alertDiv.innerHTML = `
+      <div style="font-size:14px;font-weight:700;color:#E65100;margin-bottom:8px;"><i class="fas fa-exclamation-triangle"></i> Alertes stock (${stockData.total_alertes})</div>
+      ${stockData.rupture.map(p => `<div style="font-size:12px;color:#D32F2F;padding:2px 0;"><i class="fas fa-times-circle"></i> <b>${p.nom}</b> - Rupture de stock</div>`).join('')}
+      ${stockData.stock_bas.map(p => `<div style="font-size:12px;color:#E65100;padding:2px 0;"><i class="fas fa-exclamation-circle"></i> <b>${p.nom}</b> - Stock bas (${p.stock} ${p.unite||''})</div>`).join('')}
+    `;
+    stats.appendChild(alertDiv);
   }
 }
 
@@ -1934,11 +1986,15 @@ async function updateOrderStatus(id, status) {
 // =============================================
 function renderVendeurProfile() {
   const u = userData || {};
+  const verifBadge = u.verifie ? '<span style="background:#E8F5E9;color:#2E7D32;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:600;margin-left:6px;"><i class="fas fa-check-circle"></i> Vérifié</span>' : '';
+  const premiumBadge = u.premium ? `<span style="background:linear-gradient(135deg,#FFD700,#FFA000);color:#fff;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:600;margin-left:6px;"><i class="fas fa-crown"></i> ${u.plan}</span>` : '';
+
   document.getElementById('vendeurProfile').innerHTML = `
     <div class="profile-header">
       <div class="profile-avatar"><i class="fas fa-store"></i></div>
-      <div class="profile-name">${u.nom_boutique || 'Ma Boutique'}</div>
+      <div class="profile-name">${u.nom_boutique || 'Ma Boutique'} ${verifBadge} ${premiumBadge}</div>
       <div class="profile-phone">${u.slug ? '@' + u.slug : ''}</div>
+      ${u.score_fiabilite ? `<div style="margin-top:6px;"><span style="background:#E3F2FD;color:#1565C0;padding:3px 8px;border-radius:12px;font-size:11px;font-weight:600;"><i class="fas fa-shield-alt"></i> Score: ${Math.round(u.score_fiabilite)}%</span></div>` : ''}
     </div>
     <div class="profile-cards">
       <div class="profile-card">
@@ -1947,10 +2003,26 @@ function renderVendeurProfile() {
         <div class="profile-row"><span class="profile-row-label"><i class="fas fa-envelope"></i> Email</span><span class="profile-row-value">${u.email||'-'}</span></div>
         <div class="profile-row"><span class="profile-row-label"><i class="fas fa-map-marker-alt"></i> Ville</span><span class="profile-row-value">${u.ville||'-'}</span></div>
         <div class="profile-row"><span class="profile-row-label"><i class="fas fa-tag"></i> Catégorie</span><span class="profile-row-value">${u.categorie_boutique||'-'}</span></div>
+        <div class="profile-row"><span class="profile-row-label"><i class="fas fa-star"></i> Note</span><span class="profile-row-value">${u.note_moyenne ? parseFloat(u.note_moyenne).toFixed(1) + '/5' : '-'} (${u.nombre_avis||0} avis)</span></div>
+        <div class="profile-row"><span class="profile-row-label"><i class="fas fa-shopping-bag"></i> Ventes</span><span class="profile-row-value">${u.nombre_ventes||0}</span></div>
+        <div class="profile-row"><span class="profile-row-label"><i class="fas fa-gem"></i> Plan</span><span class="profile-row-value">${(u.plan||'gratuit').charAt(0).toUpperCase() + (u.plan||'gratuit').slice(1)}</span></div>
       </div>
       ${u.description ? `<div class="profile-card"><div class="profile-card-title">Description</div><p style="font-size:13px;color:var(--text-secondary);">${u.description}</p></div>` : ''}
+
+      ${!u.verifie ? `
+      <div style="background:#FFF3E0;border:1px solid #FFB74D;border-radius:12px;padding:14px;margin-bottom:12px;">
+        <div style="font-size:14px;font-weight:700;color:#E65100;margin-bottom:6px;"><i class="fas fa-id-card"></i> Vérification d'identité</div>
+        <p style="font-size:12px;color:#795548;margin-bottom:10px;">Vérifiez votre identité pour obtenir le badge ✅ et gagner la confiance de vos clients.</p>
+        <button class="btn btn-primary" onclick="showVerificationForm()" style="font-size:13px;">
+          <i class="fas fa-check-double"></i> Vérifier mon identité
+        </button>
+      </div>` : ''}
+
       <button class="btn btn-primary mb-12" onclick="showThemeEditor()">
         <i class="fas fa-palette"></i> Personnaliser ma boutique
+      </button>
+      <button class="btn btn-outline mb-12" onclick="showPremiumModal()">
+        <i class="fas fa-crown"></i> Gérer mon plan
       </button>
       <button class="btn btn-outline mb-12" onclick="showEditProfile()">
         <i class="fas fa-edit"></i> Modifier le profil
@@ -1990,6 +2062,260 @@ async function updateVendeurProfile(e) {
     toast('Profil mis à jour', 'success');
     closeModal();
     renderVendeurProfile();
+  } else {
+    toast(res?.error || 'Erreur', 'error');
+  }
+}
+
+// =============================================
+// VÉRIFICATION IDENTITÉ
+// =============================================
+function showVerificationForm() {
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-title"><i class="fas fa-id-card"></i> Vérification d'identité</div>
+    <p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">
+      Soumettez un document d'identité pour obtenir le badge <span style="color:#2E7D32;">✅ Vérifié</span>. Examination sous 24-48h.
+    </p>
+    <form onsubmit="submitVerification(event)">
+      <div class="form-group">
+        <label>Type de document *</label>
+        <select id="verifType" required>
+          <option value="">-- Choisir --</option>
+          <option value="carte_identite">Carte d'identité</option>
+          <option value="passeport">Passeport</option>
+          <option value="permis_conduire">Permis de conduire</option>
+          <option value="rccm">RCCM (Registre de commerce)</option>
+          <option value="id_nat">ID National</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Numéro du document *</label>
+        <input type="text" id="verifNumero" required placeholder="Ex: 00123456789">
+      </div>
+      <div class="form-group">
+        <label>Photo du document *</label>
+        <input type="file" id="verifDoc" accept="image/*" required style="padding:8px;">
+      </div>
+      <div class="form-group">
+        <label>Selfie avec le document (optionnel)</label>
+        <input type="file" id="verifSelfie" accept="image/*" style="padding:8px;">
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Soumettre</button>
+    </form>`;
+  openModal();
+}
+
+async function submitVerification(e) {
+  e.preventDefault();
+  const formData = new FormData();
+  formData.append('type_document', document.getElementById('verifType').value);
+  formData.append('numero_document', document.getElementById('verifNumero').value);
+  const docFile = document.getElementById('verifDoc').files[0];
+  if (docFile) formData.append('document', docFile);
+  const selfieFile = document.getElementById('verifSelfie').files[0];
+  if (selfieFile) formData.append('selfie', selfieFile);
+
+  try {
+    const token = localStorage.getItem('pp_token');
+    const resp = await fetch(API_BASE + '/verifications', {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + token },
+      body: formData
+    });
+    const data = await resp.json();
+    if (resp.ok) {
+      toast('Demande envoyée ! Vérification sous 24-48h.', 'success');
+      closeModal();
+    } else {
+      toast(data.error || 'Erreur', 'error');
+    }
+  } catch (err) { toast('Erreur réseau', 'error'); }
+}
+
+// =============================================
+// AVIS VENDEUR
+// =============================================
+async function loadVendeurAvis() {
+  const container = document.getElementById('vendeurAvisList');
+  container.innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+  const data = await api('GET', '/avis/mes-avis');
+  if (!data || !data.avis || data.avis.length === 0) {
+    container.innerHTML = '<div class="empty-state"><i class="fas fa-star"></i><h4>Aucun avis</h4><p>Vos clients n\'ont pas encore laissé d\'avis</p></div>';
+    return;
+  }
+  container.innerHTML = data.avis.map(a => `
+    <div style="background:white;border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <div style="font-weight:600;font-size:13px;">${a.client?.prenom||''} ${a.client?.nom||'Client'}</div>
+        <div style="color:#F57F17;font-size:13px;">${'★'.repeat(a.note)}${'☆'.repeat(5-a.note)}</div>
+      </div>
+      ${a.produit ? `<div style="font-size:11px;color:var(--text-secondary);margin-bottom:4px;"><i class="fas fa-box"></i> ${a.produit.nom}</div>` : ''}
+      ${a.commentaire ? `<p style="font-size:13px;color:var(--text);margin:6px 0;">${a.commentaire}</p>` : ''}
+      ${a.reponse_vendeur ? `
+        <div style="background:#F5F5F5;border-radius:8px;padding:10px;margin-top:6px;">
+          <div style="font-size:11px;color:var(--primary);font-weight:600;margin-bottom:4px;"><i class="fas fa-reply"></i> Votre réponse</div>
+          <p style="font-size:12px;color:var(--text-secondary);">${a.reponse_vendeur}</p>
+        </div>` : `
+        <button onclick="repondreAvis(${a.id})" style="font-size:12px;color:var(--primary);background:none;border:none;cursor:pointer;padding:4px 0;margin-top:4px;"><i class="fas fa-reply"></i> Répondre</button>`}
+      <div style="font-size:10px;color:var(--text-secondary);margin-top:6px;">${new Date(a.createdAt).toLocaleDateString('fr-FR')}</div>
+    </div>`).join('');
+}
+
+function repondreAvis(avisId) {
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-title"><i class="fas fa-reply"></i> Répondre à l'avis</div>
+    <form onsubmit="submitReponseAvis(event, ${avisId})">
+      <div class="form-group">
+        <label>Votre réponse</label>
+        <textarea id="reponseAvisText" required placeholder="Merci pour votre retour..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Envoyer</button>
+    </form>`;
+  openModal();
+}
+
+async function submitReponseAvis(e, avisId) {
+  e.preventDefault();
+  const res = await api('PUT', '/avis/' + avisId + '/repondre', { reponse: document.getElementById('reponseAvisText').value });
+  if (res && !res.error) {
+    toast('Réponse envoyée', 'success');
+    closeModal();
+    loadVendeurAvis();
+  } else {
+    toast(res?.error || 'Erreur', 'error');
+  }
+}
+
+// =============================================
+// PREMIUM / PLANS
+// =============================================
+async function showPremiumModal() {
+  const planData = await api('GET', '/premium/mon-plan');
+  const plans = planData?.plans_disponibles || { gratuit: { limite_produits: 20, prix: 0 }, premium: { limite_produits: 100, prix: 10 }, business: { limite_produits: 500, prix: 25 } };
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-title"><i class="fas fa-crown"></i> Plans PayPro Market</div>
+    <div style="margin-bottom:12px;">
+      <div style="font-size:12px;color:var(--text-secondary);">Plan actuel: <b>${(planData?.plan||'gratuit').toUpperCase()}</b></div>
+      <div style="font-size:12px;color:var(--text-secondary);">Produits: <b>${planData?.produits_utilises||0}/${planData?.limite_produits||20}</b></div>
+      ${planData?.date_expiration ? `<div style="font-size:12px;color:var(--text-secondary);">Expire: ${new Date(planData.date_expiration).toLocaleDateString('fr-FR')}</div>` : ''}
+    </div>
+    <div style="display:grid;gap:10px;">
+      ${Object.entries(plans).map(([nom, info]) => `
+        <div style="border:2px solid ${planData?.plan===nom?'var(--primary)':'#E0E0E0'};border-radius:12px;padding:14px;${planData?.plan===nom?'background:#E8F5E9;':''}">
+          <div style="display:flex;justify-content:space-between;align-items:center;">
+            <div>
+              <div style="font-weight:700;font-size:15px;">${nom.charAt(0).toUpperCase()+nom.slice(1)}</div>
+              <div style="font-size:12px;color:var(--text-secondary);">Jusqu'à ${info.limite_produits} produits</div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-weight:700;font-size:16px;color:var(--primary);">${info.prix > 0 ? info.prix + ' USD/mois' : 'Gratuit'}</div>
+              ${planData?.plan!==nom ? `<button onclick="souscrirePlan('${nom}')" style="margin-top:6px;padding:6px 14px;background:var(--primary);color:white;border:none;border-radius:20px;font-size:12px;cursor:pointer;">Choisir</button>` : '<span style="font-size:11px;color:#2E7D32;font-weight:600;">Actuel</span>'}
+            </div>
+          </div>
+        </div>`).join('')}
+    </div>`;
+  openModal();
+}
+
+async function souscrirePlan(plan) {
+  if (plan === 'gratuit') {
+    const res = await api('POST', '/premium/annuler');
+    if (res && !res.error) { toast('Plan mis à jour', 'success'); closeModal(); loadDashboard(); }
+    else toast(res?.error || 'Erreur', 'error');
+  } else {
+    const res = await api('POST', '/premium/souscrire', { plan });
+    if (res && !res.error) { toast(`Plan ${plan} activé !`, 'success'); closeModal(); loadDashboard(); }
+    else toast(res?.error || 'Erreur', 'error');
+  }
+}
+
+// =============================================
+// CLIENT: LAISSER UN AVIS
+// =============================================
+function showReviewForm(commandeId, vendeurId) {
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-title"><i class="fas fa-star"></i> Laisser un avis</div>
+    <form onsubmit="submitReview(event, ${commandeId})">
+      <div class="form-group">
+        <label>Note *</label>
+        <div id="starRating" style="font-size:28px;color:#E0E0E0;cursor:pointer;">
+          ${ [1,2,3,4,5].map(n => `<span onclick="setRating(${n})" data-star="${n}">★</span>`).join('') }
+        </div>
+        <input type="hidden" id="reviewNote" value="5">
+      </div>
+      <div class="form-group">
+        <label>Commentaire</label>
+        <textarea id="reviewComment" placeholder="Partagez votre expérience..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> Envoyer</button>
+    </form>`;
+  setRating(5);
+  openModal();
+}
+
+function setRating(n) {
+  document.getElementById('reviewNote').value = n;
+  document.querySelectorAll('#starRating span').forEach(s => {
+    s.style.color = parseInt(s.dataset.star) <= n ? '#F57F17' : '#E0E0E0';
+  });
+}
+
+async function submitReview(e, commandeId) {
+  e.preventDefault();
+  const res = await api('POST', '/avis', {
+    commande_id: commandeId,
+    note: parseInt(document.getElementById('reviewNote').value),
+    commentaire: document.getElementById('reviewComment').value
+  });
+  if (res && !res.error) {
+    toast('Avis envoyé, merci !', 'success');
+    closeModal();
+  } else {
+    toast(res?.error || 'Erreur', 'error');
+  }
+}
+
+// =============================================
+// SIGNALEMENT
+// =============================================
+function showSignalementForm(typeCible, cibleId) {
+  document.getElementById('modalBody').innerHTML = `
+    <div class="modal-title"><i class="fas fa-flag"></i> Signaler</div>
+    <form onsubmit="submitSignalement(event, '${typeCible}', ${cibleId})">
+      <div class="form-group">
+        <label>Raison *</label>
+        <select id="signaRaison" required>
+          <option value="">-- Choisir --</option>
+          <option value="produit_contrefait">Produit contrefait</option>
+          <option value="arnaque">Arnaque</option>
+          <option value="contenu_inapproprie">Contenu inapproprié</option>
+          <option value="prix_abusif">Prix abusif</option>
+          <option value="non_livraison">Non livraison</option>
+          <option value="harcelement">Harcèlement</option>
+          <option value="autre">Autre</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Description</label>
+        <textarea id="signaDesc" placeholder="Décrivez le problème..."></textarea>
+      </div>
+      <button type="submit" class="btn btn-danger"><i class="fas fa-flag"></i> Signaler</button>
+    </form>`;
+  openModal();
+}
+
+async function submitSignalement(e, typeCible, cibleId) {
+  e.preventDefault();
+  const res = await api('POST', '/signalements', {
+    type_cible: typeCible,
+    cible_id: cibleId,
+    raison: document.getElementById('signaRaison').value,
+    description: document.getElementById('signaDesc').value
+  });
+  if (res && !res.error) {
+    toast('Signalement envoyé', 'success');
+    closeModal();
   } else {
     toast(res?.error || 'Erreur', 'error');
   }

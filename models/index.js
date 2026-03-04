@@ -9,6 +9,9 @@ const Livraison = require('./Livraison');
 const ZoneLivraison = require('./ZoneLivraison');
 const Notification = require('./Notification');
 const Admin = require('./Admin');
+const Verification = require('./Verification');
+const Avis = require('./Avis');
+const Signalement = require('./Signalement');
 
 // =============================================
 // ASSOCIATIONS
@@ -46,6 +49,23 @@ Paiement.belongsTo(Commande, { foreignKey: 'commande_id', as: 'commande' });
 Commande.hasOne(Livraison, { foreignKey: 'commande_id', as: 'livraison' });
 Livraison.belongsTo(Commande, { foreignKey: 'commande_id', as: 'commande' });
 
+// --- Vendeur <-> Verification ---
+Vendeur.hasMany(Verification, { foreignKey: 'vendeur_id', as: 'verifications' });
+Verification.belongsTo(Vendeur, { foreignKey: 'vendeur_id', as: 'vendeur' });
+
+// --- Avis ---
+Commande.hasOne(Avis, { foreignKey: 'commande_id', as: 'avis' });
+Avis.belongsTo(Commande, { foreignKey: 'commande_id', as: 'commande' });
+Client.hasMany(Avis, { foreignKey: 'client_id', as: 'avis' });
+Avis.belongsTo(Client, { foreignKey: 'client_id', as: 'client' });
+Vendeur.hasMany(Avis, { foreignKey: 'vendeur_id', as: 'avis' });
+Avis.belongsTo(Vendeur, { foreignKey: 'vendeur_id', as: 'vendeur' });
+Produit.hasMany(Avis, { foreignKey: 'produit_id', as: 'avis' });
+Avis.belongsTo(Produit, { foreignKey: 'produit_id', as: 'produit' });
+
+// --- Signalement ---
+Vendeur.hasMany(Signalement, { foreignKey: 'cible_id', as: 'signalements_recus', constraints: false, scope: { type_cible: 'vendeur' } });
+
 module.exports = {
   sequelize,
   Client,
@@ -57,5 +77,8 @@ module.exports = {
   Livraison,
   ZoneLivraison,
   Notification,
-  Admin
+  Admin,
+  Verification,
+  Avis,
+  Signalement
 };

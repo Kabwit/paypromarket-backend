@@ -48,7 +48,7 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // Servir les fichiers uploadés
-const uploadDirs = ['uploads', 'uploads/logos', 'uploads/produits', 'uploads/autres'];
+const uploadDirs = ['uploads', 'uploads/logos', 'uploads/produits', 'uploads/autres', 'uploads/verifications'];
 uploadDirs.forEach(dir => {
   const dirPath = path.join(__dirname, dir);
   if (!fs.existsSync(dirPath)) {
@@ -91,6 +91,18 @@ app.use('/api/notifications', require('./routes/notification'));
 // Administration (panel admin)
 app.use('/api/admin', require('./routes/admin'));
 
+// Vérifications (identité vendeur)
+app.use('/api/verifications', require('./routes/verification'));
+
+// Avis & Notations
+app.use('/api/avis', require('./routes/avis'));
+
+// Signalements (anti-arnaque)
+app.use('/api/signalements', require('./routes/signalement'));
+
+// Premium & Gestion stock
+app.use('/api/premium', require('./routes/premium'));
+
 // =============================================
 // PANNEAU ADMIN (interface web)
 // =============================================
@@ -131,7 +143,11 @@ app.get('/', (req, res) => {
       dashboard: '/api/dashboard',
       clients: '/api/clients',
       notifications: '/api/notifications',
-      admin: '/api/admin'
+      admin: '/api/admin',
+      verifications: '/api/verifications',
+      avis: '/api/avis',
+      signalements: '/api/signalements',
+      premium: '/api/premium'
     }
   });
 });

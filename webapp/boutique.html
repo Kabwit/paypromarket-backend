@@ -769,7 +769,7 @@
         <div class="shop-logo" id="headerLogo"><i class="fas fa-store"></i></div>
         <div>
           <div class="shop-header-name" id="headerName">Boutique</div>
-          <span class="shop-header-badge"><i class="fas fa-check-circle"></i> Vérifié</span>
+          <span class="shop-header-badge" id="headerBadge" style="display:none;"><i class="fas fa-check-circle"></i> Vérifié</span>
         </div>
       </div>
       <div class="shop-header-actions">
@@ -828,6 +828,22 @@
     <div class="products-section">
       <div class="product-grid" id="productGrid"></div>
     </div>
+  </div>
+
+  <!-- Reviews Section -->
+  <div class="container" id="reviewsSection" style="display:none;">
+    <div style="background:white;border-radius:16px;padding:20px;margin:16px 0;box-shadow:0 2px 8px rgba(0,0,0,0.06);">
+      <h3 style="font-size:18px;margin-bottom:4px;"><i class="fas fa-star" style="color:#F57F17;"></i> Avis clients</h3>
+      <div id="reviewsStats" style="margin-bottom:12px;"></div>
+      <div id="reviewsList"></div>
+    </div>
+  </div>
+
+  <!-- Signalement -->
+  <div class="container" style="text-align:center;margin-bottom:16px;">
+    <button onclick="showBoutiqueSignalement()" style="font-size:12px;color:#999;background:none;border:none;cursor:pointer;padding:8px;">
+      <i class="fas fa-flag"></i> Signaler cette boutique
+    </button>
   </div>
 
   <!-- Footer -->
@@ -1068,6 +1084,14 @@ function renderShop() {
   document.getElementById('heroLogo').innerHTML = logoHtml;
   document.getElementById('headerLogo').innerHTML = logoHtml;
 
+  // Verified badge
+  const headerBadge = document.getElementById('headerBadge');
+  if (s.verifie) {
+    headerBadge.style.display = '';
+  } else {
+    headerBadge.style.display = 'none';
+  }
+
   // Texts
   document.getElementById('heroTitle').textContent = s.nom_boutique;
   document.getElementById('headerName').textContent = s.nom_boutique;
@@ -1076,6 +1100,19 @@ function renderShop() {
   document.getElementById('heroCity').innerHTML = `<i class="fas fa-map-marker-alt"></i> ${s.ville || 'RDC'}`;
   document.getElementById('heroCategory').innerHTML = `<i class="fas fa-tag"></i> ${s.categorie_boutique || s.type_boutique || 'Boutique'}`;
   document.getElementById('heroProductCount').textContent = allProducts.length;
+
+  // Hero badges (verified, premium, score, rating)
+  let heroBadges = '';
+  if (s.verifie) heroBadges += '<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.2);color:white;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;backdrop-filter:blur(4px);"><i class="fas fa-check-circle"></i> Vérifié</span> ';
+  if (s.premium) heroBadges += `<span style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#FFD700,#FFA000);color:white;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;"><i class="fas fa-crown"></i> ${s.plan||'Premium'}</span> `;
+  if (s.note_moyenne) heroBadges += `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.2);color:white;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;backdrop-filter:blur(4px);"><i class="fas fa-star"></i> ${parseFloat(s.note_moyenne).toFixed(1)}/5 (${s.nombre_avis||0})</span> `;
+  if (s.score_fiabilite) heroBadges += `<span style="display:inline-flex;align-items:center;gap:4px;background:rgba(255,255,255,0.2);color:white;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;backdrop-filter:blur(4px);"><i class="fas fa-shield-alt"></i> ${Math.round(s.score_fiabilite)}%</span>`;
+  if (heroBadges) {
+    const badgeContainer = document.createElement('div');
+    badgeContainer.style.cssText = 'display:flex;gap:6px;flex-wrap:wrap;justify-content:center;margin-top:10px;';
+    badgeContainer.innerHTML = heroBadges;
+    document.querySelector('.hero-meta').after(badgeContainer);
+  }
 
   // WhatsApp contact
   if (s.telephone) {
@@ -1088,6 +1125,9 @@ function renderShop() {
 
   // Products
   renderProducts();
+
+  // Load reviews
+  loadBoutiqueAvis(s.id);
 
   // Show page
   document.getElementById('loadingPage').style.display = 'none';
@@ -1536,6 +1576,114 @@ function toast(msg, type = 'info') {
   d.innerHTML = msg;
   document.getElementById('toastContainer').appendChild(d);
   setTimeout(() => d.remove(), 3500);
+}
+
+// =============================================
+// AVIS BOUTIQUE
+// =============================================
+async function loadBoutiqueAvis(vendeurId) {
+  try {
+    const resp = await fetch(API_BASE + '/avis/vendeur/' + vendeurId);
+    const data = await resp.json();
+    if (!data || !data.avis || data.avis.length === 0) return;
+
+    document.getElementById('reviewsSection').style.display = '';
+    const stats = data.stats || {};
+    const dist = stats.distribution || {};
+
+    // Stats
+    document.getElementById('reviewsStats').innerHTML = `
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;">
+        <div style="text-align:center;">
+          <div style="font-size:32px;font-weight:800;color:#F57F17;">${(stats.note_moyenne||0).toFixed(1)}</div>
+          <div style="color:#F57F17;font-size:14px;">${'★'.repeat(Math.round(stats.note_moyenne||0))}${'☆'.repeat(5-Math.round(stats.note_moyenne||0))}</div>
+          <div style="font-size:11px;color:#999;">${stats.total_avis||0} avis</div>
+        </div>
+        <div style="flex:1;">
+          ${[5,4,3,2,1].map(n => `
+            <div style="display:flex;align-items:center;gap:6px;margin:2px 0;">
+              <span style="font-size:11px;width:12px;">${n}</span>
+              <div style="flex:1;height:6px;background:#F0F0F0;border-radius:3px;overflow:hidden;">
+                <div style="height:100%;background:#F57F17;width:${stats.total_avis ? (dist[n]||0)/stats.total_avis*100 : 0}%;border-radius:3px;"></div>
+              </div>
+              <span style="font-size:10px;color:#999;width:20px;">${dist[n]||0}</span>
+            </div>`).join('')}
+        </div>
+      </div>`;
+
+    // Reviews list
+    document.getElementById('reviewsList').innerHTML = data.avis.map(a => `
+      <div style="border-bottom:1px solid #F0F0F0;padding:12px 0;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+          <div style="font-weight:600;font-size:13px;">${a.client?.prenom||''} ${a.client?.nom||''}</div>
+          <div style="color:#F57F17;font-size:12px;">${'★'.repeat(a.note)}${'☆'.repeat(5-a.note)}</div>
+        </div>
+        ${a.commentaire ? `<p style="font-size:13px;color:#555;margin:4px 0;">${a.commentaire}</p>` : ''}
+        ${a.reponse_vendeur ? `
+          <div style="background:#F8F8F8;border-radius:8px;padding:8px 10px;margin-top:6px;">
+            <div style="font-size:11px;color:var(--primary-color,#1B5E20);font-weight:600;margin-bottom:2px;"><i class="fas fa-reply"></i> Réponse du vendeur</div>
+            <p style="font-size:12px;color:#666;">${a.reponse_vendeur}</p>
+          </div>` : ''}
+        <div style="font-size:10px;color:#aaa;margin-top:4px;">${new Date(a.createdAt).toLocaleDateString('fr-FR')}</div>
+      </div>`).join('');
+  } catch (e) { console.log('Avis:', e); }
+}
+
+// =============================================
+// SIGNALEMENT BOUTIQUE
+// =============================================
+function showBoutiqueSignalement() {
+  const s = shopData;
+  const modal = document.createElement('div');
+  modal.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
+  modal.innerHTML = `
+    <div style="background:white;border-radius:16px;padding:24px;max-width:400px;width:100%;max-height:80vh;overflow:auto;">
+      <h3 style="margin-bottom:12px;"><i class="fas fa-flag" style="color:#D32F2F;"></i> Signaler cette boutique</h3>
+      <form id="boutiqueSignalForm">
+        <div style="margin-bottom:12px;">
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Raison *</label>
+          <select id="bsRaison" required style="width:100%;padding:10px;border:1px solid #E0E0E0;border-radius:8px;">
+            <option value="">-- Choisir --</option>
+            <option value="produit_contrefait">Produit contrefait</option>
+            <option value="arnaque">Arnaque</option>
+            <option value="contenu_inapproprie">Contenu inapproprié</option>
+            <option value="prix_abusif">Prix abusif</option>
+            <option value="non_livraison">Non livraison</option>
+            <option value="autre">Autre</option>
+          </select>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:13px;font-weight:600;display:block;margin-bottom:4px;">Description</label>
+          <textarea id="bsDesc" placeholder="Décrivez le problème..." style="width:100%;padding:10px;border:1px solid #E0E0E0;border-radius:8px;min-height:80px;"></textarea>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button type="button" onclick="this.closest('[style*=fixed]').remove()" style="flex:1;padding:10px;background:#F0F0F0;border:none;border-radius:8px;cursor:pointer;">Annuler</button>
+          <button type="submit" style="flex:1;padding:10px;background:#D32F2F;color:white;border:none;border-radius:8px;cursor:pointer;font-weight:600;">Signaler</button>
+        </div>
+      </form>
+    </div>`;
+  document.body.appendChild(modal);
+  modal.querySelector('#boutiqueSignalForm').onsubmit = async (e) => {
+    e.preventDefault();
+    const token = localStorage.getItem('pp_token');
+    if (!token) { toast('Connectez-vous pour signaler', 'error'); modal.remove(); return; }
+    try {
+      const resp = await fetch(API_BASE + '/signalements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({
+          type_cible: 'vendeur',
+          cible_id: s.id,
+          raison: document.getElementById('bsRaison').value,
+          description: document.getElementById('bsDesc').value
+        })
+      });
+      const data = await resp.json();
+      if (resp.ok) { toast('Signalement envoyé', 'success'); }
+      else { toast(data.error || 'Erreur', 'error'); }
+    } catch (err) { toast('Erreur réseau', 'error'); }
+    modal.remove();
+  };
 }
 
 // =============================================
