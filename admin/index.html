@@ -8,9 +8,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #1B5E20;
-      --primary-light: #2E7D32;
-      --primary-dark: #0D3B12;
+      --primary: #37474F;
+      --primary-light: #546E7A;
+      --primary-dark: #263238;
       --accent: #FF9800;
       --accent-light: #FFB74D;
       --bg: #f0f2f5;
@@ -1601,7 +1601,7 @@
                   <td class="actions">
                     <button class="action-btn view" title="Voir le document" onclick="window.open('${v.image_document}', '_blank')"><i class="fas fa-eye"></i></button>
                     ${v.statut === 'en_attente' ? `
-                      <button class="action-btn edit" title="Approuver" onclick="approuverVerification(${v.id})" style="color:#2E7D32;"><i class="fas fa-check"></i></button>
+                      <button class="action-btn edit" title="Approuver" onclick="approuverVerification(${v.id})" style="color:#37474F;"><i class="fas fa-check"></i></button>
                       <button class="action-btn delete" title="Rejeter" onclick="rejeterVerification(${v.id})"><i class="fas fa-times"></i></button>
                     ` : ''}
                   </td>
@@ -1673,7 +1673,7 @@
                   <td class="actions">
                     ${s.statut === 'ouvert' ? `<button class="action-btn edit" title="Mettre en examen" onclick="traiterSignalement(${s.id}, 'en_examen')"><i class="fas fa-search"></i></button>` : ''}
                     ${['ouvert', 'en_examen'].includes(s.statut) ? `
-                      <button class="action-btn edit" title="Résoudre" onclick="traiterSignalement(${s.id}, 'résolu')" style="color:#2E7D32;"><i class="fas fa-check"></i></button>
+                      <button class="action-btn edit" title="Résoudre" onclick="traiterSignalement(${s.id}, 'résolu')" style="color:#37474F;"><i class="fas fa-check"></i></button>
                       <button class="action-btn delete" title="Classer" onclick="traiterSignalement(${s.id}, 'classé')"><i class="fas fa-archive"></i></button>
                     ` : ''}
                   </td>

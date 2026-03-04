@@ -9,9 +9,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #1B5E20;
-      --primary-light: #4CAF50;
-      --primary-dark: #0D3B12;
+      --primary: #37474F;
+      --primary-light: #546E7A;
+      --primary-dark: #263238;
       --accent: #FF9800;
       --accent-dark: #E68900;
       --bg: #F5F5F5;
@@ -1704,7 +1704,7 @@ async function loadDashboard() {
     const shareMsg = encodeURIComponent(`🛍️ Découvrez ma boutique *${u.nom_boutique}* sur PayPro Market RDC !\n\n👉 ${boutiqueUrl}`);
 
     // Badges vendeur
-    const badgeVerifie = u.verifie ? '<span style="display:inline-flex;align-items:center;gap:4px;background:#E8F5E9;color:#2E7D32;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;"><i class="fas fa-check-circle"></i> Vérifié</span>' : '<span style="display:inline-flex;align-items:center;gap:4px;background:#FFF3E0;color:#E65100;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;" onclick="showVerificationForm()"><i class="fas fa-exclamation-circle"></i> Non vérifié</span>';
+    const badgeVerifie = u.verifie ? '<span style="display:inline-flex;align-items:center;gap:4px;background:#ECEFF1;color:#37474F;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;"><i class="fas fa-check-circle"></i> Vérifié</span>' : '<span style="display:inline-flex;align-items:center;gap:4px;background:#FFF3E0;color:#E65100;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;cursor:pointer;" onclick="showVerificationForm()"><i class="fas fa-exclamation-circle"></i> Non vérifié</span>';
     const badgePremium = u.premium ? `<span style="display:inline-flex;align-items:center;gap:4px;background:linear-gradient(135deg,#FFD700,#FFA000);color:#fff;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;"><i class="fas fa-crown"></i> ${u.plan}</span>` : '';
     const scoreBadge = u.score_fiabilite ? `<span style="display:inline-flex;align-items:center;gap:4px;background:#E3F2FD;color:#1565C0;padding:4px 10px;border-radius:20px;font-size:11px;font-weight:600;"><i class="fas fa-shield-alt"></i> Score: ${Math.round(u.score_fiabilite)}%</span>` : '';
 
@@ -1718,7 +1718,7 @@ async function loadDashboard() {
       <div class="stat-card"><i class="fas fa-money-bill-wave"></i><div class="stat-value">${formatFC(data.chiffre_affaires?.mensuel ?? 0)}</div><div class="stat-label">Revenus</div></div>
       <div class="stat-card"><i class="fas fa-clock"></i><div class="stat-value">${data.commandes?.par_statut?.en_attente ?? 0}</div><div class="stat-label">En attente</div></div>
       ${boutiqueUrl ? `
-      <div style="grid-column:1/-1;background:linear-gradient(135deg,#1B5E20,#4CAF50);border-radius:14px;padding:20px;color:white;margin-top:4px;">
+      <div style="grid-column:1/-1;background:linear-gradient(135deg,#37474F,#607D8B);border-radius:14px;padding:20px;color:white;margin-top:4px;">
         <div style="font-size:15px;font-weight:700;margin-bottom:6px;"><i class="fas fa-share-alt"></i> Partager ma boutique</div>
         <div style="font-size:12px;opacity:0.9;margin-bottom:12px;">Envoyez le lien de votre boutique à vos clients via WhatsApp ou copiez le lien</div>
         <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -1986,7 +1986,7 @@ async function updateOrderStatus(id, status) {
 // =============================================
 function renderVendeurProfile() {
   const u = userData || {};
-  const verifBadge = u.verifie ? '<span style="background:#E8F5E9;color:#2E7D32;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:600;margin-left:6px;"><i class="fas fa-check-circle"></i> Vérifié</span>' : '';
+  const verifBadge = u.verifie ? '<span style="background:#ECEFF1;color:#37474F;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:600;margin-left:6px;"><i class="fas fa-check-circle"></i> Vérifié</span>' : '';
   const premiumBadge = u.premium ? `<span style="background:linear-gradient(135deg,#FFD700,#FFA000);color:#fff;padding:3px 8px;border-radius:12px;font-size:10px;font-weight:600;margin-left:6px;"><i class="fas fa-crown"></i> ${u.plan}</span>` : '';
 
   document.getElementById('vendeurProfile').innerHTML = `
@@ -2074,7 +2074,7 @@ function showVerificationForm() {
   document.getElementById('modalBody').innerHTML = `
     <div class="modal-title"><i class="fas fa-id-card"></i> Vérification d'identité</div>
     <p style="font-size:12px;color:var(--text-secondary);margin-bottom:16px;">
-      Soumettez un document d'identité pour obtenir le badge <span style="color:#2E7D32;">✅ Vérifié</span>. Examination sous 24-48h.
+      Soumettez un document d'identité pour obtenir le badge <span style="color:#37474F;">✅ Vérifié</span>. Examination sous 24-48h.
     </p>
     <form onsubmit="submitVerification(event)">
       <div class="form-group">
@@ -2202,7 +2202,7 @@ async function showPremiumModal() {
     </div>
     <div style="display:grid;gap:10px;">
       ${Object.entries(plans).map(([nom, info]) => `
-        <div style="border:2px solid ${planData?.plan===nom?'var(--primary)':'#E0E0E0'};border-radius:12px;padding:14px;${planData?.plan===nom?'background:#E8F5E9;':''}">
+        <div style="border:2px solid ${planData?.plan===nom?'var(--primary)':'#E0E0E0'};border-radius:12px;padding:14px;${planData?.plan===nom?'background:#ECEFF1;':''}">
           <div style="display:flex;justify-content:space-between;align-items:center;">
             <div>
               <div style="font-weight:700;font-size:15px;">${nom.charAt(0).toUpperCase()+nom.slice(1)}</div>
@@ -2210,7 +2210,7 @@ async function showPremiumModal() {
             </div>
             <div style="text-align:right;">
               <div style="font-weight:700;font-size:16px;color:var(--primary);">${info.prix > 0 ? info.prix + ' USD/mois' : 'Gratuit'}</div>
-              ${planData?.plan!==nom ? `<button onclick="souscrirePlan('${nom}')" style="margin-top:6px;padding:6px 14px;background:var(--primary);color:white;border:none;border-radius:20px;font-size:12px;cursor:pointer;">Choisir</button>` : '<span style="font-size:11px;color:#2E7D32;font-weight:600;">Actuel</span>'}
+              ${planData?.plan!==nom ? `<button onclick="souscrirePlan('${nom}')" style="margin-top:6px;padding:6px 14px;background:var(--primary);color:white;border:none;border-radius:20px;font-size:12px;cursor:pointer;">Choisir</button>` : '<span style="font-size:11px;color:#37474F;font-weight:600;">Actuel</span>'}
             </div>
           </div>
         </div>`).join('')}
@@ -2326,7 +2326,7 @@ async function submitSignalement(e, typeCible, cibleId) {
 // =============================================
 function showThemeEditor() {
   const t = (userData?.theme) || {};
-  const couleurPrimaire = t.couleur_primaire || '#1B5E20';
+  const couleurPrimaire = t.couleur_primaire || '#37474F';
   const couleurAccent = t.couleur_accent || '#FF9800';
   const couleurFond = t.couleur_fond || '#FAFAFA';
   const couleurTexte = t.couleur_texte || '#1A1A1A';
@@ -2506,7 +2506,7 @@ async function saveTheme(e) {
 async function resetTheme() {
   if (!confirm('Réinitialiser le thème par défaut ?')) return;
   const defaultTheme = {
-    couleur_primaire: '#1B5E20', couleur_accent: '#FF9800',
+    couleur_primaire: '#37474F', couleur_accent: '#FF9800',
     couleur_fond: '#FAFAFA', couleur_texte: '#1A1A1A',
     affichage_produits: 'grille', colonnes_produits: 2,
     arrondi_cartes: 12, police: 'Inter', style_hero: 'gradient',
