@@ -6,6 +6,8 @@ const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 const fs = require('fs');
+const http = require('http');
+const { Server } = require('socket.io');
 
 const app = express();
 
@@ -103,6 +105,9 @@ app.use('/api/signalements', require('./routes/signalement'));
 // Premium & Gestion stock
 app.use('/api/premium', require('./routes/premium'));
 
+// Chat / Messagerie
+app.use('/api/chat', require('./routes/chat'));
+
 // =============================================
 // PANNEAU ADMIN (interface web)
 // =============================================
@@ -147,6 +152,7 @@ app.get('/', (req, res) => {
       verifications: '/api/verifications',
       avis: '/api/avis',
       signalements: '/api/signalements',
+      chat: '/api/chat',
       premium: '/api/premium'
     }
   });
@@ -175,10 +181,47 @@ const PORT = process.env.PORT || 5000;
 sequelize.sync({ alter: true })
   .then(() => {
     console.log('✅ Base de données synchronisée');
-    app.listen(PORT, '0.0.0.0', () => {
+
+    // Créer serveur HTTP + Socket.io
+    const server = http.createServer(app);
+    const io = new Server(server, {
+      cors: { origin: '*', methods: ['GET', 'POST'] }
+    });
+
+    // Rendre io accessible aux controllers
+    app.set('io', io);
+
+    // Socket.io - Gestion des connexions
+    io.on('connection', (socket) => {
+      console.log('🔌 Socket connecté:', socket.id);
+
+      // L'utilisateur se joint à sa room personnelle
+      socket.on('join', ({ type, id }) => {
+        const room = `user_${type}_${id}`;
+        socket.join(room);
+        console.log(`👤 ${type} #${id} a rejoint la room ${room}`);
+      });
+
+      // Écouter la saisie en cours
+      socket.on('typing', ({ conversation_id, user_type, user_id }) => {
+        socket.to(conversation_id).emit('user_typing', { user_type, user_id });
+      });
+
+      // Rejoindre une conversation
+      socket.on('join_conversation', (conversation_id) => {
+        socket.join(conversation_id);
+      });
+
+      socket.on('disconnect', () => {
+        console.log('🔌 Socket déconnecté:', socket.id);
+      });
+    });
+
+    server.listen(PORT, '0.0.0.0', () => {
       console.log(`🚀 Serveur PayPro Market démarré sur le port ${PORT}`);
       console.log(`📍 Local:   http://localhost:${PORT}`);
       console.log(`📍 Réseau:  http://10.242.164.149:${PORT}`);
+      console.log(`💬 Socket.io activé`);
     });
   })
   .catch(err => {

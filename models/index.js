@@ -12,6 +12,7 @@ const Admin = require('./Admin');
 const Verification = require('./Verification');
 const Avis = require('./Avis');
 const Signalement = require('./Signalement');
+const Message = require('./Message');
 
 // =============================================
 // ASSOCIATIONS
@@ -66,6 +67,9 @@ Avis.belongsTo(Produit, { foreignKey: 'produit_id', as: 'produit' });
 // --- Signalement ---
 Vendeur.hasMany(Signalement, { foreignKey: 'cible_id', as: 'signalements_recus', constraints: false, scope: { type_cible: 'vendeur' } });
 
+// --- Message (Chat) ---
+// Pas de FK contrainte car expediteur/destinataire est polymorphique (client ou vendeur)
+
 module.exports = {
   sequelize,
   Client,
@@ -80,5 +84,6 @@ module.exports = {
   Admin,
   Verification,
   Avis,
-  Signalement
+  Signalement,
+  Message
 };

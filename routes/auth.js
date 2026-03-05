@@ -8,14 +8,15 @@ const {
   getProfil
 } = require('../controllers/authController');
 const { auth } = require('../middleware/auth');
+const { inscriptionVendeurRules, inscriptionClientRules, connexionRules } = require('../middleware/validation');
 
 // Routes vendeur
-router.post('/vendeur/inscription', inscriptionVendeur);
-router.post('/vendeur/connexion', connexionVendeur);
+router.post('/vendeur/inscription', inscriptionVendeurRules, inscriptionVendeur);
+router.post('/vendeur/connexion', connexionRules, connexionVendeur);
 
 // Routes client
-router.post('/client/inscription', inscriptionClient);
-router.post('/client/connexion', connexionClient);
+router.post('/client/inscription', inscriptionClientRules, inscriptionClient);
+router.post('/client/connexion', connexionRules, connexionClient);
 
 // Profil (authentifié)
 router.get('/profil', auth, getProfil);

@@ -10,8 +10,10 @@ const {
   annulerCommande
 } = require('../controllers/commandeController');
 
+const { createCommandeRules } = require('../middleware/validation');
+
 // Client: créer une commande
-router.post('/', authClient, createCommande);
+router.post('/', authClient, createCommandeRules, createCommande);
 
 // Client: mes commandes
 router.get('/mes-commandes', authClient, getMesCommandes);
