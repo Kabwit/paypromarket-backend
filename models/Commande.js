@@ -43,6 +43,14 @@ const Commande = sequelize.define('Commande', {
   date_livraison_estimee: {
     type: DataTypes.DATE
   }
-}, { timestamps: true });
+}, {
+  timestamps: true,
+  indexes: [
+    { fields: ['client_id'] },
+    { fields: ['vendeur_id'] },
+    { fields: ['statut'] },
+    { fields: ['numero_commande'], unique: true }
+  ]
+});
 
 module.exports = Commande;

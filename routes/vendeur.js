@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { authVendeur } = require('../middleware/auth');
 const { uploadLogo } = require('../middleware/upload');
+const { optimizeImages } = require('../middleware/imageOptimizer');
 const {
   getMonProfil,
   updateProfil,
@@ -22,7 +23,7 @@ router.get('/boutique/:slug', getBoutiqueBySlug);
 // Routes protégées (vendeur connecté)
 router.get('/profil', authVendeur, getMonProfil);
 router.put('/profil', authVendeur, updateProfil);
-router.post('/logo', authVendeur, uploadLogo, uploadLogoCtrl);
+router.post('/logo', authVendeur, uploadLogo, optimizeImages, uploadLogoCtrl);
 router.put('/theme', authVendeur, updateTheme);
 
 // Zones de livraison

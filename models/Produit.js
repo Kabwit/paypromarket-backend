@@ -80,6 +80,16 @@ const Produit = sequelize.define('Produit', {
     type: DataTypes.INTEGER,
     defaultValue: 0
   }
-}, { timestamps: true });
+}, {
+  timestamps: true,
+  indexes: [
+    { fields: ['vendeur_id'] },
+    { fields: ['categorie'] },
+    { fields: ['nom'] },
+    { fields: ['disponible', 'categorie'] },
+    { fields: ['slug'], unique: true },
+    { fields: ['prix_cdf'] }
+  ]
+});
 
 module.exports = Produit;

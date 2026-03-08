@@ -4,10 +4,12 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const rateLimit = require('express-rate-limit');
+const compression = require('compression');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
 const { Server } = require('socket.io');
+const logger = require('./middleware/logger');
 
 const app = express();
 
@@ -17,6 +19,7 @@ const { sequelize } = require('./models');
 // =============================================
 // SÉCURITÉ & MIDDLEWARES
 // =============================================
+app.use(compression());
 app.use(helmet({
   contentSecurityPolicy: {
     directives: {
@@ -37,7 +40,9 @@ app.use(helmet({
   crossOriginOpenerPolicy: false,
 }));
 app.use(cors());
-app.use(morgan('dev'));
+app.use(morgan('combined', {
+  stream: { write: (message) => logger.info(message.trim(), { type: 'http' }) }
+}));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
@@ -48,6 +53,14 @@ const limiter = rateLimit({
   message: { error: 'Trop de requêtes, veuillez réessayer plus tard.' }
 });
 app.use('/api/', limiter);
+
+// Rate limiting strict pour l'authentification (anti brute-force)
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  message: { error: 'Trop de tentatives de connexion, réessayez dans 15 minutes.' }
+});
+app.use('/api/auth', authLimiter);
 
 // Servir les fichiers uploadés
 const uploadDirs = ['uploads', 'uploads/logos', 'uploads/produits', 'uploads/autres', 'uploads/verifications'];
@@ -162,7 +175,7 @@ app.get('/', (req, res) => {
 // GESTION DES ERREURS
 // =============================================
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  logger.error('Erreur serveur', { error: err.message, stack: err.stack, url: req.originalUrl });
   res.status(err.status || 500).json({
     error: err.message || 'Erreur interne du serveur'
   });
@@ -180,7 +193,7 @@ const PORT = process.env.PORT || 5000;
 
 sequelize.sync({ alter: true })
   .then(() => {
-    console.log('✅ Base de données synchronisée');
+    logger.info('Base de données synchronisée');
 
     // Créer serveur HTTP + Socket.io
     const server = http.createServer(app);
@@ -193,13 +206,13 @@ sequelize.sync({ alter: true })
 
     // Socket.io - Gestion des connexions
     io.on('connection', (socket) => {
-      console.log('🔌 Socket connecté:', socket.id);
+      logger.info('Socket connecté', { socketId: socket.id });
 
       // L'utilisateur se joint à sa room personnelle
       socket.on('join', ({ type, id }) => {
         const room = `user_${type}_${id}`;
         socket.join(room);
-        console.log(`👤 ${type} #${id} a rejoint la room ${room}`);
+        logger.info('Utilisateur a rejoint une room', { type, id, room });
       });
 
       // Écouter la saisie en cours
@@ -213,17 +226,16 @@ sequelize.sync({ alter: true })
       });
 
       socket.on('disconnect', () => {
-        console.log('🔌 Socket déconnecté:', socket.id);
+        logger.info('Socket déconnecté', { socketId: socket.id });
       });
     });
 
     server.listen(PORT, '0.0.0.0', () => {
-      console.log(`🚀 Serveur PayPro Market démarré sur le port ${PORT}`);
-      console.log(`📍 Local:   http://localhost:${PORT}`);
-      console.log(`📍 Réseau:  http://10.242.164.149:${PORT}`);
-      console.log(`💬 Socket.io activé`);
+      logger.info(`Serveur PayPro Market démarré sur le port ${PORT}`);
+      logger.info(`Local: http://localhost:${PORT}`);
+      logger.info('Socket.io activé');
     });
   })
   .catch(err => {
-    console.error('❌ Erreur de synchronisation DB:', err.message);
+    logger.error('Erreur de synchronisation DB', { error: err.message });
   });

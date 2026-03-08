@@ -35,6 +35,10 @@ const Client = sequelize.define('Client', {
   actif: {
     type: DataTypes.BOOLEAN,
     defaultValue: true
+  },
+  fcm_token: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
 }, { timestamps: true });
 

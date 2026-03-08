@@ -13,6 +13,7 @@ const Verification = require('./Verification');
 const Avis = require('./Avis');
 const Signalement = require('./Signalement');
 const Message = require('./Message');
+const HistoriqueStatut = require('./HistoriqueStatut');
 
 // =============================================
 // ASSOCIATIONS
@@ -64,6 +65,10 @@ Avis.belongsTo(Vendeur, { foreignKey: 'vendeur_id', as: 'vendeur' });
 Produit.hasMany(Avis, { foreignKey: 'produit_id', as: 'avis' });
 Avis.belongsTo(Produit, { foreignKey: 'produit_id', as: 'produit' });
 
+// --- Historique Statut ---
+Commande.hasMany(HistoriqueStatut, { foreignKey: 'commande_id', as: 'historique_statuts' });
+HistoriqueStatut.belongsTo(Commande, { foreignKey: 'commande_id', as: 'commande' });
+
 // --- Signalement ---
 Vendeur.hasMany(Signalement, { foreignKey: 'cible_id', as: 'signalements_recus', constraints: false, scope: { type_cible: 'vendeur' } });
 
@@ -85,5 +90,6 @@ module.exports = {
   Verification,
   Avis,
   Signalement,
-  Message
+  Message,
+  HistoriqueStatut
 };

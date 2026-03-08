@@ -1,6 +1,7 @@
-const { Commande, LigneCommande, Produit, Vendeur, Client, Paiement, Livraison, Notification } = require('../models');
+const { Commande, LigneCommande, Produit, Vendeur, Client, Paiement, Livraison, Notification, HistoriqueStatut } = require('../models');
 const crypto = require('crypto');
 const sequelize = require('../config/db');
+const { sendPushToUser } = require('../utils/pushNotification');
 
 // =============================================
 // CRÉER UNE COMMANDE (client connecté)
@@ -287,7 +288,17 @@ exports.updateStatutCommande = async (req, res) => {
       });
     }
 
+    const ancienStatut = commande.statut;
     await commande.update({ statut });
+
+    // Enregistrer l'historique du changement de statut
+    await HistoriqueStatut.create({
+      commande_id: commande.id,
+      ancien_statut: ancienStatut,
+      nouveau_statut: statut,
+      modifie_par_type: 'vendeur',
+      modifie_par_id: req.user.id
+    });
 
     // Mettre à jour le statut de livraison selon la commande
     const mapLivraison = {
@@ -330,6 +341,13 @@ exports.updateStatutCommande = async (req, res) => {
       donnees: { commande_id: commande.id }
     });
 
+    // Push notification au client
+    sendPushToUser(Client, commande.client_id,
+      `Commande ${statut}`,
+      `Votre commande ${commande.numero_commande} est maintenant "${statut}".`,
+      { commande_id: String(commande.id), type: typeNotif }
+    );
+
     res.status(200).json({
       message: `Statut mis à jour: ${statut}`,
       commande
@@ -358,6 +376,15 @@ exports.annulerCommande = async (req, res) => {
 
     await commande.update({ statut: 'annulée' });
 
+    // Enregistrer l'historique du changement de statut
+    await HistoriqueStatut.create({
+      commande_id: commande.id,
+      ancien_statut: commande.statut,
+      nouveau_statut: 'annulée',
+      modifie_par_type: 'client',
+      modifie_par_id: req.user.id
+    });
+
     // Rétablir le stock
     const lignes = await LigneCommande.findAll({ where: { commande_id: commande.id } });
     for (const ligne of lignes) {
@@ -373,6 +400,13 @@ exports.annulerCommande = async (req, res) => {
       type: 'commande_annulée',
       donnees: { commande_id: commande.id }
     });
+
+    // Push notification au vendeur
+    sendPushToUser(Vendeur, commande.vendeur_id,
+      'Commande annulée',
+      `La commande ${commande.numero_commande} a été annulée par le client.`,
+      { commande_id: String(commande.id), type: 'commande_annulée' }
+    );
 
     res.status(200).json({ message: 'Commande annulée', commande });
   } catch (err) {

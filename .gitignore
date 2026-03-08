@@ -31,6 +31,9 @@ desktop.ini
 dist/
 build/
 
+# Firebase (clé privée - NE JAMAIS commit)
+firebase-service-account.json
+
 # Coverage tests
 coverage/
 

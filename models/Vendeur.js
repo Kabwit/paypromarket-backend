@@ -120,7 +120,20 @@ const Vendeur = sequelize.define('Vendeur', {
   limite_produits: {
     type: DataTypes.INTEGER,
     defaultValue: 20
+  },
+  fcm_token: {
+    type: DataTypes.STRING,
+    allowNull: true
   }
-}, { timestamps: true });
+}, {
+  timestamps: true,
+  indexes: [
+    { fields: ['ville'] },
+    { fields: ['categorie_boutique'] },
+    { fields: ['slug'], unique: true },
+    { fields: ['email'], unique: true },
+    { fields: ['telephone'], unique: true }
+  ]
+});
 
 module.exports = Vendeur;

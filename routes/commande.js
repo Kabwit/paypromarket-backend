@@ -30,4 +30,18 @@ router.put('/:id/statut', authVendeur, updateStatutCommande);
 // Détail d'une commande (auth requise)
 router.get('/:id', auth, getCommandeById);
 
+// Historique des statuts d'une commande
+router.get('/:id/historique', auth, async (req, res) => {
+  try {
+    const { HistoriqueStatut } = require('../models');
+    const historique = await HistoriqueStatut.findAll({
+      where: { commande_id: req.params.id },
+      order: [['createdAt', 'ASC']]
+    });
+    res.json(historique);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;
