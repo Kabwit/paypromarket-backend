@@ -10,6 +10,7 @@ const fs = require('fs');
 const http = require('http');
 const { Server } = require('socket.io');
 const logger = require('./middleware/logger');
+const { trackUTMParams } = require('./middleware/socialTracking');
 
 const app = express();
 
@@ -45,6 +46,11 @@ app.use(morgan('combined', {
 }));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// =============================================
+// UTM & SOCIAL TRACKING (Global Middleware)
+// =============================================
+app.use(trackUTMParams);
 
 // Rate limiting (protection anti-abus)
 const limiter = rateLimit({
@@ -126,6 +132,9 @@ app.use('/api/revendeurs', require('./routes/revendeur'));
 
 // Commissions (Gestion commissions revendeurs)
 app.use('/api/commissions', require('./routes/commission'));
+
+// Partage Social & Analytics (P2 Features)
+app.use('/api/sharing', require('./routes/sharing'));
 
 // =============================================
 // PANNEAU ADMIN (interface web)

@@ -2,6 +2,7 @@ const { Commande, LigneCommande, Produit, Vendeur, Client, Paiement, Livraison, 
 const crypto = require('crypto');
 const sequelize = require('../config/db');
 const { sendPushToUser } = require('../utils/pushNotification');
+const { applyUTMToOrder } = require('../middleware/socialTracking');
 
 // =============================================
 // CRÉER UNE COMMANDE (client connecté)
@@ -98,8 +99,8 @@ exports.createCommande = async (req, res) => {
       }
     }
 
-    // Créer la commande
-    const commande = await Commande.create({
+    // Créer la commande avec UTM tracking
+    const commandeData = {
       numero_commande,
       client_id: req.user.id,
       vendeur_id,
@@ -110,7 +111,12 @@ exports.createCommande = async (req, res) => {
       adresse_livraison,
       telephone_livraison,
       notes
-    }, { transaction });
+    };
+
+    // Appliquer les paramètres UTM/Tracking depuis le middleware socialTracking
+    const commandeWithTracking = applyUTMToOrder(commandeData, req.utmData);
+
+    const commande = await Commande.create(commandeWithTracking, { transaction });
 
     // Créer les lignes de commande
     for (const ligne of lignesData) {
