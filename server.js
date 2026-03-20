@@ -121,6 +121,12 @@ app.use('/api/premium', require('./routes/premium'));
 // Chat / Messagerie
 app.use('/api/chat', require('./routes/chat'));
 
+// Revendeurs (Affiliés, programme P2)
+app.use('/api/revendeurs', require('./routes/revendeur'));
+
+// Commissions (Gestion commissions revendeurs)
+app.use('/api/commissions', require('./routes/commission'));
+
 // =============================================
 // PANNEAU ADMIN (interface web)
 // =============================================

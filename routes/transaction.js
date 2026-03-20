@@ -6,13 +6,25 @@ const {
   confirmerPaiement,
   echecPaiement,
   getPaiementCommande,
-  getHistoriquePaiements
+  getHistoriquePaiements,
+  getOperators,
+  getOperatorInfo,
+  verifyPaymentStatus
 } = require('../controllers/transactionController');
 
 const { initierPaiementRules } = require('../middleware/validation');
 
+// Public: Liste des opérateurs Mobile Money
+router.get('/operateurs', getOperators);
+
+// Public: Info sur un opérateur spécifique
+router.get('/operateurs/:operateur', getOperatorInfo);
+
 // Client: initier un paiement
 router.post('/initier', authClient, initierPaiementRules, initierPaiement);
+
+// Client: vérifier le statut d'un paiement
+router.get('/verifier/:reference_transaction', auth, verifyPaymentStatus);
 
 // Webhook / simulation: confirmer un paiement (protégé par clé webhook)
 router.post('/confirmer/:reference_transaction', (req, res, next) => {

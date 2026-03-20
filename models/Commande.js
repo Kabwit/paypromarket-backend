@@ -42,6 +42,36 @@ const Commande = sequelize.define('Commande', {
   },
   date_livraison_estimee: {
     type: DataTypes.DATE
+  },
+  // Social Tracking Fields
+  utm_source: {
+    type: DataTypes.STRING,
+    comment: 'Source du trafic (facebook, instagram, google, direct, etc.)'
+  },
+  utm_campaign: {
+    type: DataTypes.STRING,
+    comment: 'Campagne marketing'
+  },
+  utm_medium: {
+    type: DataTypes.STRING,
+    comment: 'Moyen (cpc, organic, referral, etc.)'
+  },
+  referrer_id: {
+    type: DataTypes.INTEGER,
+    comment: 'ID du revendeur qui a partagé ce produit',
+    references: { model: 'Revendeurs', key: 'id' }
+  },
+  lien_referal_utilise: {
+    type: DataTypes.STRING,
+    comment: 'Lien de parrainage utilisé'
+  },
+  shared_by_date: {
+    type: DataTypes.DATE,
+    comment: 'Date du partage sur réseaux sociaux'
+  },
+  canal_vente: {
+    type: DataTypes.ENUM('direct', 'revendeur', 'referral', 'social', 'search'),
+    defaultValue: 'direct'
   }
 }, {
   timestamps: true,

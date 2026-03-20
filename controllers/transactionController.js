@@ -1,5 +1,6 @@
 const { Paiement, Commande, Notification } = require('../models');
 const crypto = require('crypto');
+const mobileMoneyService = require('../services/mobileMoneyService');
 
 // =============================================
 // INITIER UN PAIEMENT MOBILE MONEY (client)
@@ -51,20 +52,104 @@ exports.initierPaiement = async (req, res) => {
       statut: 'en_attente'
     });
 
-    // TODO: Intégrer l'API Mobile Money réelle ici
-    // Pour l'instant, on simule l'envoi de la demande de paiement
+    // Intégration Mobile Money réelle
+    let paymentResponse = {};
+    if (mode_paiement === 'mobile_money') {
+      try {
+        paymentResponse = await mobileMoneyService.initiatePayment({
+          operateur,
+          numero_telephone,
+          montant: commande.montant_total,
+          reference_transaction,
+          devise: commande.devise
+        });
+      } catch (mmError) {
+        // Si erreur Mobile Money, on retourne quand même un message utile
+        paymentResponse = {
+          success: false,
+          error: mmError.message,
+          message: `Erreur lors de l'initiation du paiement: ${mmError.message}`
+        };
+      }
+    }
 
     res.status(201).json({
       message: 'Paiement initié',
       paiement,
       instructions: mode_paiement === 'mobile_money'
-        ? `Un push USSD sera envoyé au ${numero_telephone} via ${operateur}. Confirmez le paiement sur votre téléphone.`
-        : 'Vous paierez à la livraison. Le livreur viendra avec le terminal de paiement.'
+        ? paymentResponse.message || `Un push USSD sera envoyé au ${numero_telephone} via ${operateur}.`
+        : 'Vous paierez à la livraison. Le livreur viendra avec le terminal de paiement.',
+      mobileMoneyDetails: paymentResponse
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
+// =============================================
+// GET PAYMENT OPERATORS (liste des opérateurs)
+// =============================================
+exports.getOperators = async (req, res) => {
+  try {
+    const operators = mobileMoneyService.listOperators();
+    res.json({
+      success: true,
+      operators,
+      message: 'Opérateurs Mobile Money disponibles'
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+// =============================================
+// GET OPERATOR INFO (infos spécifiques)
+// =============================================
+exports.getOperatorInfo = async (req, res) => {
+  try {
+    const { operateur } = req.params;
+    const operatorInfo = mobileMoneyService.getOperatorInfo(operateur);
+    res.json({
+      success: true,
+      operator: operatorInfo
+    });
+  } catch (err) {
+    res.status(400).json({ error: err.message });
+  }
+};
+
+// =============================================
+// VERIFY PAYMENT STATUS
+// =============================================
+exports.verifyPaymentStatus = async (req, res) => {
+  try {
+    const { reference_transaction } = req.params;
+
+    const paiement = await Paiement.findOne({
+      where: { reference_transaction }
+    });
+
+    if (!paiement) {
+      return res.status(404).json({ error: 'Paiement non trouvé' });
+    }
+
+    // Vérifier le statut auprès du service Mobile Money
+    let verificationResult = { status: paiement.statut };
+    if (paiement.mode_paiement === 'mobile_money' && paiement.operateur) {
+      try {
+        verificationResult = await mobileMoneyService.verifyPaymentStatus(
+          reference_transaction,
+          paiement.operateur
+        );
+      } catch (mmError) {
+        console.error('Error verifying status:', mmError);
+      }
+    }
+
+    res.json({
+      success: true,
+      paiement,
+      verification: verificationResult
 
 // =============================================
 // CONFIRMER UN PAIEMENT (webhook / admin / simulation)

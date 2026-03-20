@@ -14,6 +14,8 @@ const Avis = require('./Avis');
 const Signalement = require('./Signalement');
 const Message = require('./Message');
 const HistoriqueStatut = require('./HistoriqueStatut');
+const Revendeur = require('./Revendeur');
+const Commission = require('./Commission');
 
 // =============================================
 // ASSOCIATIONS
@@ -75,6 +77,23 @@ Vendeur.hasMany(Signalement, { foreignKey: 'cible_id', as: 'signalements_recus',
 // --- Message (Chat) ---
 // Pas de FK contrainte car expediteur/destinataire est polymorphique (client ou vendeur)
 
+// --- REVENDEUR & COMMISSION (P2 Features) ---
+// Revendeur <-> Commission
+Revendeur.hasMany(Commission, { foreignKey: 'revendeur_id', as: 'commissions' });
+Commission.belongsTo(Revendeur, { foreignKey: 'revendeur_id', as: 'revendeur' });
+
+// Commande <-> Commission
+Commande.hasMany(Commission, { foreignKey: 'commande_id', as: 'commissions' });
+Commission.belongsTo(Commande, { foreignKey: 'commande_id', as: 'commande' });
+
+// Produit <-> Commission
+Produit.hasMany(Commission, { foreignKey: 'produit_id', as: 'commissions' });
+Commission.belongsTo(Produit, { foreignKey: 'produit_id', as: 'produit' });
+
+// Revendeur <-> Commande (via referrer)
+Commande.belongsTo(Revendeur, { foreignKey: 'referrer_id', as: 'revendeur_referrer' });
+Revendeur.hasMany(Commande, { foreignKey: 'referrer_id', as: 'ordres_referrals' });
+
 module.exports = {
   sequelize,
   Client,
@@ -91,5 +110,7 @@ module.exports = {
   Avis,
   Signalement,
   Message,
-  HistoriqueStatut
+  HistoriqueStatut,
+  Revendeur,
+  Commission
 };
