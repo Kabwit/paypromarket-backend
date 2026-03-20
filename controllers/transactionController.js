@@ -17,7 +17,7 @@ exports.initierPaiement = async (req, res) => {
       return res.status(404).json({ error: 'Commande non trouvée' });
     }
 
-    if (commande.statut === 'annulée') {
+    if (commande.statut === 'annulee') {
       return res.status(400).json({ error: 'Cette commande a été annulée' });
     }
 
@@ -93,7 +93,7 @@ exports.confirmerPaiement = async (req, res) => {
     // Mettre à jour le statut de la commande
     const commande = await Commande.findByPk(paiement.commande_id);
     if (commande && commande.statut === 'en_attente') {
-      await commande.update({ statut: 'confirmée' });
+      await commande.update({ statut: 'confirmee' });
     }
 
     // Notifications (seulement si la commande existe)

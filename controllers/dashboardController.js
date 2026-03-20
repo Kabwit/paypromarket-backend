@@ -21,7 +21,7 @@ exports.getDashboard = async (req, res) => {
     const caJournalier = await Commande.sum('montant_total', {
       where: {
         vendeur_id,
-        statut: { [Op.notIn]: ['annulée', 'en_attente'] },
+        statut: { [Op.notIn]: ['annulee', 'en_attente'] },
         createdAt: { [Op.gte]: debutJour }
       }
     }) || 0;
@@ -30,7 +30,7 @@ exports.getDashboard = async (req, res) => {
     const caHebdomadaire = await Commande.sum('montant_total', {
       where: {
         vendeur_id,
-        statut: { [Op.notIn]: ['annulée', 'en_attente'] },
+        statut: { [Op.notIn]: ['annulee', 'en_attente'] },
         createdAt: { [Op.gte]: debutSemaine }
       }
     }) || 0;
@@ -39,7 +39,7 @@ exports.getDashboard = async (req, res) => {
     const caMensuel = await Commande.sum('montant_total', {
       where: {
         vendeur_id,
-        statut: { [Op.notIn]: ['annulée', 'en_attente'] },
+        statut: { [Op.notIn]: ['annulee', 'en_attente'] },
         createdAt: { [Op.gte]: debutMois }
       }
     }) || 0;

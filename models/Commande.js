@@ -24,7 +24,7 @@ const Commande = sequelize.define('Commande', {
     defaultValue: 'CDF'
   },
   statut: {
-    type: DataTypes.ENUM('en_attente', 'confirmée', 'préparation', 'en_cours', 'livrée', 'annulée'),
+    type: DataTypes.ENUM('en_attente', 'confirmee', 'preparation', 'en_cours', 'livree', 'annulee'),
     defaultValue: 'en_attente'
   },
   mode_livraison: {

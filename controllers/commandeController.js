@@ -274,12 +274,12 @@ exports.updateStatutCommande = async (req, res) => {
 
     // Valider la transition de statut
     const transitionsValides = {
-      'en_attente': ['confirmée', 'annulée'],
-      'confirmée': ['préparation', 'annulée'],
-      'préparation': ['en_cours', 'annulée'],
-      'en_cours': ['livrée'],
-      'livrée': [],
-      'annulée': []
+      'en_attente': ['confirmee', 'annulee'],
+      'confirmee': ['preparation', 'annulee'],
+      'preparation': ['en_cours', 'annulee'],
+      'en_cours': ['livree'],
+      'livree': [],
+      'annulee': []
     };
 
     if (!transitionsValides[commande.statut]?.includes(statut)) {
@@ -302,11 +302,11 @@ exports.updateStatutCommande = async (req, res) => {
 
     // Mettre à jour le statut de livraison selon la commande
     const mapLivraison = {
-      'confirmée': 'en_attente',
-      'préparation': 'préparation',
+      'confirmee': 'en_attente',
+      'preparation': 'preparation',
       'en_cours': 'en_cours',
-      'livrée': 'livrée',
-      'annulée': 'échec'
+      'livree': 'livree',
+      'annulee': 'echec'
     };
 
     if (mapLivraison[statut]) {
@@ -320,7 +320,7 @@ exports.updateStatutCommande = async (req, res) => {
     }
 
     // Si annulée, rétablir le stock
-    if (statut === 'annulée') {
+    if (statut === 'annulee') {
       const lignes = await LigneCommande.findAll({ where: { commande_id: commande.id } });
       for (const ligne of lignes) {
         await Produit.increment('stock', { by: ligne.quantite, where: { id: ligne.produit_id } });
@@ -328,9 +328,9 @@ exports.updateStatutCommande = async (req, res) => {
     }
 
     // Notification au client
-    const typeNotif = statut === 'annulée' ? 'commande_annulée' :
-                      statut === 'en_cours' ? 'commande_expédiée' :
-                      statut === 'livrée' ? 'commande_livrée' : 'commande_confirmée';
+    const typeNotif = statut === 'annulee' ? 'commande_annulee' :
+                      statut === 'en_cours' ? 'commande_expediee' :
+                      statut === 'livree' ? 'commande_livree' : 'commande_confirmee';
 
     await Notification.create({
       destinataire_type: 'client',
@@ -370,17 +370,18 @@ exports.annulerCommande = async (req, res) => {
       return res.status(404).json({ error: 'Commande non trouvée' });
     }
 
-    if (!['en_attente', 'confirmée'].includes(commande.statut)) {
+    if (!['en_attente', 'confirmee'].includes(commande.statut)) {
       return res.status(400).json({ error: 'Cette commande ne peut plus être annulée' });
     }
 
-    await commande.update({ statut: 'annulée' });
+    const ancienStatut = commande.statut;
+    await commande.update({ statut: 'annulee' });
 
     // Enregistrer l'historique du changement de statut
     await HistoriqueStatut.create({
       commande_id: commande.id,
-      ancien_statut: commande.statut,
-      nouveau_statut: 'annulée',
+      ancien_statut: ancienStatut,
+      nouveau_statut: 'annulee',
       modifie_par_type: 'client',
       modifie_par_id: req.user.id
     });

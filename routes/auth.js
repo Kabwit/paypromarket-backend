@@ -30,7 +30,7 @@ router.put('/fcm-token', auth, async (req, res) => {
     }
 
     const { Client, Vendeur } = require('../models');
-    const Model = req.user.type === 'vendeur' ? Vendeur : Client;
+    const Model = req.user.role === 'vendeur' ? Vendeur : Client;
     await Model.update({ fcm_token }, { where: { id: req.user.id } });
 
     res.json({ message: 'Token FCM enregistré' });

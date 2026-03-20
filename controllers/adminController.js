@@ -99,16 +99,16 @@ exports.getDashboardStats = async (req, res) => {
     // Chiffre d'affaires
     const [caJournalier, caHebdomadaire, caMensuel, caTotal] = await Promise.all([
       Commande.sum('montant_total', {
-        where: { statut: { [Op.notIn]: ['annulée', 'en_attente'] }, createdAt: { [Op.gte]: debutJour } }
+        where: { statut: { [Op.notIn]: ['annulee', 'en_attente'] }, createdAt: { [Op.gte]: debutJour } }
       }),
       Commande.sum('montant_total', {
-        where: { statut: { [Op.notIn]: ['annulée', 'en_attente'] }, createdAt: { [Op.gte]: debutSemaine } }
+        where: { statut: { [Op.notIn]: ['annulee', 'en_attente'] }, createdAt: { [Op.gte]: debutSemaine } }
       }),
       Commande.sum('montant_total', {
-        where: { statut: { [Op.notIn]: ['annulée', 'en_attente'] }, createdAt: { [Op.gte]: debutMois } }
+        where: { statut: { [Op.notIn]: ['annulee', 'en_attente'] }, createdAt: { [Op.gte]: debutMois } }
       }),
       Commande.sum('montant_total', {
-        where: { statut: { [Op.notIn]: ['annulée', 'en_attente'] } }
+        where: { statut: { [Op.notIn]: ['annulee', 'en_attente'] } }
       })
     ]);
 
@@ -237,7 +237,7 @@ exports.getVendeurDetail = async (req, res) => {
 
     // Stats du vendeur
     const caTotal = await Commande.sum('montant_total', {
-      where: { vendeur_id: vendeur.id, statut: { [Op.notIn]: ['annulée'] } }
+      where: { vendeur_id: vendeur.id, statut: { [Op.notIn]: ['annulee'] } }
     });
 
     res.json({ vendeur, stats: { chiffre_affaires_total: caTotal || 0 } });
@@ -269,7 +269,7 @@ exports.deleteVendeur = async (req, res) => {
 
     // Vérifier commandes en cours
     const commandesEnCours = await Commande.count({
-      where: { vendeur_id: vendeur.id, statut: { [Op.notIn]: ['livrée', 'annulée'] } }
+      where: { vendeur_id: vendeur.id, statut: { [Op.notIn]: ['livree', 'annulee'] } }
     });
     if (commandesEnCours > 0) {
       return res.status(400).json({ error: `Impossible: ${commandesEnCours} commande(s) en cours` });
@@ -346,7 +346,7 @@ exports.getClientDetail = async (req, res) => {
     if (!client) return res.status(404).json({ error: 'Client non trouvé' });
 
     const totalDepenses = await Commande.sum('montant_total', {
-      where: { client_id: client.id, statut: { [Op.notIn]: ['annulée'] } }
+      where: { client_id: client.id, statut: { [Op.notIn]: ['annulee'] } }
     });
 
     res.json({ client, stats: { total_depenses: totalDepenses || 0 } });
@@ -377,7 +377,7 @@ exports.deleteClient = async (req, res) => {
     if (!client) return res.status(404).json({ error: 'Client non trouvé' });
 
     const commandesEnCours = await Commande.count({
-      where: { client_id: client.id, statut: { [Op.notIn]: ['livrée', 'annulée'] } }
+      where: { client_id: client.id, statut: { [Op.notIn]: ['livree', 'annulee'] } }
     });
     if (commandesEnCours > 0) {
       return res.status(400).json({ error: `Impossible: ${commandesEnCours} commande(s) en cours` });
