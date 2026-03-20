@@ -150,6 +150,11 @@ exports.verifyPaymentStatus = async (req, res) => {
       success: true,
       paiement,
       verification: verificationResult
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
 
 // =============================================
 // CONFIRMER UN PAIEMENT (webhook / admin / simulation)
